@@ -23,7 +23,7 @@ A Flutter mobile application for browsing, searching, and favoriting images from
 
 ### Prerequisites
 
-- Flutter 3.32+ (Dart 3.8+)
+- Flutter 3.47+ (Dart 3.13+)
 - A free Pixabay API key — create an account at
   [pixabay.com/api/docs](https://pixabay.com/api/docs/) and copy your key
 
