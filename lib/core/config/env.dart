@@ -5,6 +5,4 @@
 /// or `flutter run --dart-define-from-file=env.json`.
 abstract final class Env {
   static const String pixabayApiKey = String.fromEnvironment('PIXABAY_API_KEY');
-
-  static bool get hasPixabayApiKey => pixabayApiKey.isNotEmpty;
 }
