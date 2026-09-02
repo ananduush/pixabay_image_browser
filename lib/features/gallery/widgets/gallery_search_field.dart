@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/widgets/glyphs.dart';
 
 /// The search affordance as drawn in the design. Search itself is a later
 /// slice, so this is presentation only and ignores pointer input.
@@ -30,7 +29,7 @@ class GallerySearchField extends StatelessWidget {
           child: Row(
             spacing: 10,
             children: <Widget>[
-              Glyph.search(),
+              const Icon(Icons.search, size: 16, color: AppColors.ink),
               Expanded(
                 child: Text(
                   placeholder,

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/widgets/glyphs.dart';
 import '../models/pixabay_image.dart';
 
 /// One photograph, cover-fitted with a 2pt radius. While loading it shows
@@ -61,11 +60,19 @@ class GalleryImageFallback extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 spacing: AppSpacing.sm,
                 children: <Widget>[
-                  Glyph.brokenImage(withScene: true),
+                  const Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 22,
+                    color: AppColors.rule35,
+                  ),
                   Text(label, style: AppTypography.tileFallback),
                 ],
               )
-            : Glyph.brokenImage(size: 18),
+            : const Icon(
+                Icons.image_not_supported_outlined,
+                size: 18,
+                color: AppColors.rule35,
+              ),
       ),
     );
   }

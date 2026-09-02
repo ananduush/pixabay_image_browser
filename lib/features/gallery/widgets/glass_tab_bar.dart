@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/glass_surface.dart';
-import '../../../core/widgets/glyphs.dart';
 
 /// Floating glass pill with the Explore / Favourites / Profile tabs.
 /// Navigation between tabs arrives with those features; for now the pill
@@ -34,18 +33,9 @@ class GlassTabBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               spacing: 6,
               children: <Widget>[
-                _Tab(
-                  active: activeIndex == 0,
-                  builder: (Color color) => Glyph.grid(color: color),
-                ),
-                _Tab(
-                  active: activeIndex == 1,
-                  builder: (Color color) => Glyph.heart(color: color),
-                ),
-                _Tab(
-                  active: activeIndex == 2,
-                  builder: (Color color) => Glyph.person(color: color),
-                ),
+                _Tab(active: activeIndex == 0, icon: Icons.grid_view_outlined),
+                _Tab(active: activeIndex == 1, icon: Icons.favorite_outline),
+                _Tab(active: activeIndex == 2, icon: Icons.person_outline),
               ],
             ),
           ),
@@ -56,10 +46,10 @@ class GlassTabBar extends StatelessWidget {
 }
 
 class _Tab extends StatelessWidget {
-  const _Tab({required this.active, required this.builder});
+  const _Tab({required this.active, required this.icon});
 
   final bool active;
-  final Widget Function(Color color) builder;
+  final IconData icon;
 
   static const double size = 54;
 
@@ -73,7 +63,11 @@ class _Tab extends StatelessWidget {
           color: active ? AppColors.ink : Colors.transparent,
         ),
         child: Center(
-          child: builder(active ? AppColors.paper : AppColors.text44),
+          child: Icon(
+            icon,
+            size: 19,
+            color: active ? AppColors.paper : AppColors.text44,
+          ),
         ),
       ),
     );

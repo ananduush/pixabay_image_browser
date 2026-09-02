@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/widgets/glyphs.dart';
 import '../../../core/widgets/pill_button.dart';
 import '../services/pixabay_exception.dart';
 
@@ -42,28 +42,28 @@ class GalleryErrorView extends StatelessWidget {
       bool retry,
     ) = switch (error) {
       PixabayNetworkException() => (
-        Glyph.wifiOff(),
+        const Icon(Icons.wifi_off, size: 34, color: AppColors.rule35),
         offlineTitle,
         offlineBody,
         null,
         true,
       ),
       PixabayApiException(:final requestLabel) => (
-        Glyph.alert(),
+        const Icon(Icons.error_outline, size: 34, color: AppColors.critical),
         apiTitle,
         apiBody,
         requestLabel,
         true,
       ),
       PixabayMissingKeyException(:final message) => (
-        Glyph.alert(),
+        const Icon(Icons.error_outline, size: 34, color: AppColors.critical),
         missingKeyTitle,
         message,
         null,
         false,
       ),
       PixabayUnexpectedException(:final message) => (
-        Glyph.alert(),
+        const Icon(Icons.error_outline, size: 34, color: AppColors.critical),
         unexpectedTitle,
         unexpectedBody,
         message,
