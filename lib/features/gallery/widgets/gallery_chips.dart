@@ -19,14 +19,13 @@ class GalleryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The row is wider than a 320–375pt screen minus the gutters, so it
+    // scrolls horizontally instead of overflowing.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.gutter,
-        16,
-        AppSpacing.gutter,
-        0,
-      ),
-      child: ClipRect(
+      padding: const EdgeInsets.only(top: 16),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
         child: Row(
           spacing: 20,
           children: <Widget>[

@@ -39,8 +39,15 @@ final class PixabayApiException extends PixabayException {
   /// HTTP status, when one was received.
   final int? statusCode;
 
-  /// Short request label for the error screen, e.g. `/api/?q=popular`.
+  /// Short request label for the error screen, e.g. `/api/?q=fog`.
   final String path;
 
   String get requestLabel => 'HTTP ${statusCode ?? '—'} · $path';
+}
+
+/// A failure the layers below did not anticipate (a bug, not a Pixabay or
+/// network problem). Carried so the UI can still offer a retry instead of
+/// loading forever.
+final class PixabayUnexpectedException extends PixabayException {
+  const PixabayUnexpectedException(super.message);
 }

@@ -27,6 +27,9 @@ class GalleryErrorView extends StatelessWidget {
       'The image service returned an error. Nothing is wrong with your '
       'device.';
   static const String missingKeyTitle = 'API key missing';
+  static const String unexpectedTitle = 'Something went wrong';
+  static const String unexpectedBody =
+      'The app hit an unexpected error while loading the feed.';
   static const String retryLabel = 'Try again';
 
   @override
@@ -58,6 +61,13 @@ class GalleryErrorView extends StatelessWidget {
         message,
         null,
         false,
+      ),
+      PixabayUnexpectedException(:final message) => (
+        Glyph.alert(),
+        unexpectedTitle,
+        unexpectedBody,
+        message,
+        true,
       ),
     };
 

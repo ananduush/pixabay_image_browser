@@ -75,12 +75,14 @@ void main() {
     });
   });
 
-  test('adds q when a query is given', () async {
+  test('a query drops the curated-feed restriction and adds q', () async {
     answerWith(jsonEncode(samplePage()), 200);
 
     await service.fetchImages(query: ' fog ');
 
-    expect(capturedRequest().uri.queryParameters['q'], 'fog');
+    final parameters = capturedRequest().uri.queryParameters;
+    expect(parameters['q'], 'fog');
+    expect(parameters.containsKey('editors_choice'), isFalse);
   });
 
   test('maps a 400 plain-text body to PixabayApiException', () async {
@@ -91,7 +93,7 @@ void main() {
       throwsA(
         isA<PixabayApiException>()
             .having((e) => e.statusCode, 'statusCode', 400)
-            .having((e) => e.path, 'path', '/api/?q=popular')
+            .having((e) => e.path, 'path', '/api/?editors_choice=true')
             .having((e) => e.message, 'message', contains('ERROR 400')),
       ),
     );

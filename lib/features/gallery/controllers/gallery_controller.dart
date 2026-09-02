@@ -29,6 +29,12 @@ class GalleryController extends GetxController {
     } on PixabayException catch (error) {
       if (error is PixabayMissingKeyException) debugPrint(error.message);
       state.value = GalleryFailure(error);
+    } catch (error) {
+      // Unexpected errors still get an error screen (onInit fires this
+      // unawaited, so without this the skeleton would spin forever), but
+      // rethrow so they stay visible to crash reporting.
+      state.value = GalleryFailure(PixabayUnexpectedException('$error'));
+      rethrow;
     }
   }
 }

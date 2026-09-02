@@ -38,7 +38,10 @@ class PixabayService {
     if (_apiKey.isEmpty) throw const PixabayMissingKeyException();
 
     final hasQuery = query != null && query.trim().isNotEmpty;
-    final requestLabel = '$apiPath?q=${hasQuery ? query.trim() : 'popular'}';
+    // Mirrors the distinguishing parameter actually sent, minus the API key.
+    final requestLabel = hasQuery
+        ? '$apiPath?q=${Uri.encodeQueryComponent(query.trim())}'
+        : '$apiPath?editors_choice=true';
 
     final Response<Object?> response;
     try {
@@ -49,7 +52,7 @@ class PixabayService {
           'image_type': 'photo',
           'safesearch': 'true',
           'order': 'popular',
-          'editors_choice': 'true',
+          if (!hasQuery) 'editors_choice': 'true',
           'per_page': perPage,
           'page': page,
           if (hasQuery) 'q': query.trim(),

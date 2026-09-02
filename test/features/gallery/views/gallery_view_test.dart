@@ -73,14 +73,17 @@ void main() {
   ) async {
     when(repository.getImages).thenAnswer(
       (_) => Future<PixabayPage>.error(
-        const PixabayApiException(statusCode: 500, path: '/api/?q=popular'),
+        const PixabayApiException(
+          statusCode: 500,
+          path: '/api/?editors_choice=true',
+        ),
       ),
     );
 
     await pumpGallery(tester);
 
     expect(find.text(GalleryErrorView.apiTitle), findsOneWidget);
-    expect(find.text('HTTP 500 · /api/?q=popular'), findsOneWidget);
+    expect(find.text('HTTP 500 · /api/?editors_choice=true'), findsOneWidget);
     expect(find.text(GalleryErrorView.retryLabel), findsOneWidget);
   });
 

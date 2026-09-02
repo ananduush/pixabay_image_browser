@@ -71,7 +71,10 @@ void main() {
   test('an API failure becomes GalleryFailure(PixabayApiException)', () async {
     when(repository.getImages).thenAnswer(
       (_) => Future<PixabayPage>.error(
-        const PixabayApiException(statusCode: 500, path: '/api/?q=popular'),
+        const PixabayApiException(
+          statusCode: 500,
+          path: '/api/?editors_choice=true',
+        ),
       ),
     );
 
@@ -133,7 +136,7 @@ void main() {
     verify(repository.getImages).called(2);
   });
 
-  test('unexpected errors are not swallowed', () async {
+  test('unexpected errors surface a retryable failure and rethrow', () async {
     when(
       repository.getImages,
     ).thenAnswer((_) => Future<PixabayPage>.error(StateError('bug')));
@@ -141,6 +144,14 @@ void main() {
     final controller = GalleryController(repository: repository);
 
     await expectLater(controller.loadImages(), throwsStateError);
+    expect(
+      controller.state.value,
+      isA<GalleryFailure>().having(
+        (s) => s.error,
+        'error',
+        isA<PixabayUnexpectedException>(),
+      ),
+    );
   });
 
   test('GalleryLoaded groups images as hero + up to three tiles', () {
