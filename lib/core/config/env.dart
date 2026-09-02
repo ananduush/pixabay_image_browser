@@ -1,7 +1,10 @@
 /// Compile-time environment configuration.
 ///
 /// The Pixabay API key is injected at build time and is never committed:
-/// `flutter run --dart-define-from-file=env.json`
+/// `flutter run --dart-define=PIXABAY_API_KEY=YOUR_KEY`
+/// or `flutter run --dart-define-from-file=env.json`.
 abstract final class Env {
   static const String pixabayApiKey = String.fromEnvironment('PIXABAY_API_KEY');
+
+  static bool get hasPixabayApiKey => pixabayApiKey.isNotEmpty;
 }

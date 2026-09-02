@@ -54,21 +54,44 @@ flutter pub get
 flutter run --dart-define-from-file=env.json
 ```
 
+The key can also be passed directly:
+
+```sh
+flutter run --dart-define=PIXABAY_API_KEY=YOUR_KEY
+```
+
+If no key is supplied the app starts and shows an "API key missing" screen with
+these instructions instead of sending an invalid request.
+
 ## Project Structure
+
+Feature-first vertical slices. Each feature owns its models, data access,
+GetX controller/binding and UI; `core/` holds only what more than one feature
+genuinely shares.
 
 ```
 lib/
-  app/
-    core/          # constants, theme, environment config
-    data/
-      models/      # data models
-      providers/   # Pixabay API client
+  core/
+    config/        # compile-time environment (PIXABAY_API_KEY)
+    routes/        # GetX route table
+    theme/         # design tokens: colours, spacing, typography, ThemeData
+    widgets/       # shared widgets: glass surface, pill button, line glyphs
+  features/
+    gallery/       # Explore feed (Pixabay editor's picks)
+      models/      # PixabayImage, PixabayPage
+      services/    # PixabayService (Dio) + typed PixabayException
       repositories/
-      services/    # storage, auth/session
-    modules/       # feature modules: home, search, details, login, favorites
-    routes/        # route definitions
+      controllers/ # GalleryController + sealed GalleryState
+      bindings/
+      views/
+      widgets/
   main.dart
+test/
+  features/gallery/   # model parsing, service, controller and view tests
 ```
+
+Data flows View → Controller → Repository → Service → Pixabay API; models are
+the typed data passed between layers.
 
 ## Screenshots
 
