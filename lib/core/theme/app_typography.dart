@@ -88,4 +88,22 @@ abstract final class AppTypography {
 
   /// Header trailing label — Instrument Sans 10.5, +.06em, uppercase.
   static TextStyle get headerLabel => label(10.5);
+
+  /// search cancel — Instrument Sans 14.
+  static TextStyle get cancel => sans(14);
+
+  /// searching caption — Instrument Sans 12.5.
+  static TextStyle get searchStatus => sans(12.5, color: AppColors.text62);
+
+  /// result count — Newsreader 18.
+  static TextStyle get resultCount => serif(18);
+
+  /// result query — Instrument Sans 12.
+  static TextStyle get resultQuery => sans(12, color: AppColors.text56);
+
+  /// suggestion pill — Instrument Sans 13.
+  static TextStyle get suggestion => sans(13);
+
+  /// text link — Instrument Sans 13.5.
+  static TextStyle get link => sans(13.5, color: AppColors.text62);
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/pill_button.dart';
 import '../services/pixabay_exception.dart';
+import 'gallery_state_view.dart';
 
 /// Full-screen failure states from the design: offline, API error and the
 /// developer-facing missing-key screen.
@@ -71,42 +71,24 @@ class GalleryErrorView extends StatelessWidget {
       ),
     };
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xxl,
-        110,
-        AppSpacing.xxl,
-        0,
-      ),
-      child: Column(
-        children: <Widget>[
-          glyph,
-          const SizedBox(height: AppSpacing.lg),
+    return GalleryStateView(
+      glyph: glyph,
+      title: title,
+      body: body,
+      children: <Widget>[
+        if (detail != null) ...<Widget>[
+          const SizedBox(height: 12),
           Text(
-            title,
+            detail,
             textAlign: TextAlign.center,
-            style: AppTypography.stateTitle,
+            style: AppTypography.mono(11),
           ),
-          const SizedBox(height: 9),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: AppTypography.stateBody,
-          ),
-          if (detail != null) ...<Widget>[
-            const SizedBox(height: 12),
-            Text(
-              detail,
-              textAlign: TextAlign.center,
-              style: AppTypography.mono(11),
-            ),
-          ],
-          if (retry) ...<Widget>[
-            const SizedBox(height: 24),
-            PillButton(label: retryLabel, onPressed: onRetry),
-          ],
         ],
-      ),
+        if (retry) ...<Widget>[
+          const SizedBox(height: 24),
+          PillButton(label: retryLabel, onPressed: onRetry),
+        ],
+      ],
     );
   }
 }

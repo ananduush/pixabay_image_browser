@@ -77,7 +77,7 @@ lib/
     theme/         # design tokens: colours, spacing, typography, ThemeData
     widgets/       # shared widgets: glass surface, pill button, line glyphs
   features/
-    gallery/       # Explore feed (Pixabay editor's picks)
+    gallery/       # Explore feed (Pixabay editor's picks) and keyword search
       models/      # PixabayImage, PixabayPage
       services/    # PixabayService (Dio) + typed PixabayException
       repositories/

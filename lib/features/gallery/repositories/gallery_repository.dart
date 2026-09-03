@@ -8,7 +8,11 @@ class GalleryRepository {
 
   final PixabayService _service;
 
-  Future<PixabayPage> getImages({int page = 1, int perPage = 20}) {
-    return _service.fetchImages(page: page, perPage: perPage);
+  Future<PixabayPage> getImages({
+    String query = '',
+    int page = 1,
+    int perPage = 20,
+  }) {
+    return _service.fetchImages(query: query, page: page, perPage: perPage);
   }
 }

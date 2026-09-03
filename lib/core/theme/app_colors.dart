@@ -9,6 +9,7 @@ abstract final class AppColors {
   static const Color critical = Color(0xFFA4392B);
 
   // Ink fills (rgba(22,19,15,x)).
+  static const Color inkFill16 = Color(0x2916130F);
   static const Color inkFill9 = Color(0x1716130F);
   static const Color inkFill7 = Color(0x1216130F);
   static const Color inkFill55 = Color(0x0E16130F);
@@ -25,6 +26,7 @@ abstract final class AppColors {
   static const Color rule35 = Color(0x59000000);
   static const Color rule28 = Color(0x47000000);
   static const Color rule25 = Color(0x40000000);
+  static const Color rule20 = Color(0x33000000);
   static const Color rule9 = Color(0x17000000);
   static const Color rule7 = Color(0x12000000);
 
