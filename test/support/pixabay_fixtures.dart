@@ -31,12 +31,16 @@ Map<String, dynamic> sampleHit({
   };
 }
 
-Map<String, dynamic> samplePage({int hitCount = 2}) {
+Map<String, dynamic> samplePage({
+  int hitCount = 2,
+  int firstId = 100,
+  int totalHits = 500,
+}) {
   return <String, dynamic>{
     'total': 4692,
-    'totalHits': 500,
+    'totalHits': totalHits,
     'hits': <Map<String, dynamic>>[
-      for (var i = 0; i < hitCount; i++) sampleHit(id: 100 + i),
+      for (var i = 0; i < hitCount; i++) sampleHit(id: firstId + i),
     ],
   };
 }

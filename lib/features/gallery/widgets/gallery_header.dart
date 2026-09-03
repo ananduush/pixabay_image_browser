@@ -5,9 +5,10 @@ import '../../../core/theme/app_typography.dart';
 
 /// "Aperture" wordmark with a small uppercase label on the right.
 class GalleryHeader extends StatelessWidget {
-  const GalleryHeader({super.key, this.trailingLabel});
+  const GalleryHeader({super.key, this.trailingLabel, this.onTrailingTap});
 
   final String? trailingLabel;
+  final VoidCallback? onTrailingTap;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +27,19 @@ class GalleryHeader extends StatelessWidget {
         children: <Widget>[
           Text('Aperture', style: AppTypography.brand),
           if (label != null)
-            Text(label.toUpperCase(), style: AppTypography.headerLabel),
+            onTrailingTap != null
+                ? GestureDetector(
+                    onTap: onTrailingTap,
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 6, 0, 6),
+                      child: Text(
+                        label.toUpperCase(),
+                        style: AppTypography.headerLabel,
+                      ),
+                    ),
+                  )
+                : Text(label.toUpperCase(), style: AppTypography.headerLabel),
         ],
       ),
     );

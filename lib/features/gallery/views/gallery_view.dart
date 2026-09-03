@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -8,8 +9,10 @@ import '../controllers/gallery_state.dart';
 import '../models/pixabay_image.dart';
 import '../widgets/gallery_chips.dart';
 import '../widgets/gallery_error_view.dart';
+import '../widgets/gallery_feed_footer.dart';
 import '../widgets/gallery_header.dart';
 import '../widgets/gallery_image_group.dart';
+import '../widgets/gallery_refresh_pill.dart';
 import '../widgets/gallery_search_empty_view.dart';
 import '../widgets/gallery_search_field.dart';
 import '../widgets/gallery_search_results_header.dart';
@@ -21,7 +24,7 @@ import '../widgets/glass_tab_bar.dart';
 class GalleryView extends GetView<GalleryController> {
   const GalleryView({super.key});
 
-  static const String headerLabel = 'Pixabay';
+  static const String headerLabel = 'Refresh';
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +43,26 @@ class GalleryView extends GetView<GalleryController> {
               ),
             ),
           ),
-          const GlassTabBar(activeIndex: 0),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: IgnorePointer(
+                child: Obx(
+                  () => switch (controller.state.value) {
+                    GalleryLoaded(status: FeedRefreshing()) => const Padding(
+                      padding: EdgeInsets.only(top: 6),
+                      child: Center(child: GalleryRefreshPill()),
+                    ),
+                    _ => const SizedBox.shrink(),
+                  },
+                ),
+              ),
+            ),
+          ),
+          GlassTabBar(activeIndex: 0, onActiveTap: controller.scrollToTop),
         ],
       ),
     );
@@ -58,67 +80,111 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = this.state;
-    return CustomScrollView(
-      controller: controller.scrollController,
-      slivers: <Widget>[
-        SliverToBoxAdapter(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              GalleryHeader(
-                trailingLabel: state is GalleryFailure
-                    ? null
-                    : GalleryView.headerLabel,
-              ),
-              GallerySearchField(
-                controller: controller.searchController,
-                focusNode: controller.searchFocus,
-                onChanged: controller.onQueryChanged,
-                onSubmitted: controller.search,
-                onClear: controller.clearSearch,
-                onCancel: controller.cancelSearch,
-              ),
-              if (state case GalleryLoaded(isSearch: false))
-                const GalleryChips(),
-            ],
-          ),
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification notification) {
+        // depth 0 is the feed itself; the chips row scrolls too
+        if (notification.depth != 0) return false;
+        final dragging = switch (notification) {
+          ScrollStartNotification(:final dragDetails) => dragDetails != null,
+          ScrollUpdateNotification(:final dragDetails) => dragDetails != null,
+          OverscrollNotification(:final dragDetails) => dragDetails != null,
+          ScrollEndNotification() => false,
+          _ => null,
+        };
+        if (dragging != null) controller.onUserDrag(dragging: dragging);
+        return false;
+      },
+      child: CustomScrollView(
+        controller: controller.scrollController,
+        // scrolling the results drops the keyboard
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        // scrolling the results drops the keyboard
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
         ),
-        ...switch (state) {
-          GalleryLoading(isSearch: false) => const <Widget>[
-            SliverToBoxAdapter(child: GallerySkeleton()),
-          ],
-          GalleryLoading(:final query) => <Widget>[
-            SliverToBoxAdapter(child: GallerySearchingView(query: query)),
-          ],
-          GalleryLoaded(images: <PixabayImage>[], :final query)
-              when query.isNotEmpty =>
-            <Widget>[
-              SliverToBoxAdapter(
-                child: GallerySearchEmptyView(
-                  query: query,
-                  onSuggestion: controller.search,
-                  onBack: controller.cancelSearch,
+        slivers: <Widget>[
+          CupertinoSliverRefreshControl(
+            onRefresh: controller.refreshFromPull,
+            refreshTriggerPullDistance: 64,
+            refreshIndicatorExtent: 0,
+            builder: GalleryPullHint.builder,
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                GalleryHeader(
+                  trailingLabel: state is GalleryFailure
+                      ? null
+                      : GalleryView.headerLabel,
+                  onTrailingTap: controller.refreshFeed,
                 ),
-              ),
+                GallerySearchField(
+                  controller: controller.searchController,
+                  focusNode: controller.searchFocus,
+                  onChanged: controller.onQueryChanged,
+                  onSubmitted: controller.search,
+                  onClear: controller.clearSearch,
+                  onCancel: controller.cancelSearch,
+                ),
+                if (state case GalleryLoaded(isSearch: false))
+                  const GalleryChips(),
+              ],
+            ),
+          ),
+          ...switch (state) {
+            GalleryLoading(isSearch: false) => const <Widget>[
+              SliverToBoxAdapter(child: GallerySkeleton()),
             ],
-          GalleryLoaded(:final groups, :final query, :final totalHits) =>
-            <Widget>[
-              if (query.isNotEmpty)
+            GalleryLoading(:final query) => <Widget>[
+              SliverToBoxAdapter(child: GallerySearchingView(query: query)),
+            ],
+            GalleryLoaded(images: <PixabayImage>[], :final query)
+                when query.isNotEmpty =>
+              <Widget>[
                 SliverToBoxAdapter(
-                  child: GallerySearchResultsHeader(
-                    totalHits: totalHits,
+                  child: GallerySearchEmptyView(
                     query: query,
+                    onSuggestion: controller.search,
+                    onBack: controller.cancelSearch,
                   ),
                 ),
-              _GroupsSliver(groups: groups, underHeader: query.isNotEmpty),
+              ],
+            GalleryLoaded(
+              :final groups,
+              :final query,
+              :final totalHits,
+              :final status,
+              :final nextPage,
+            ) =>
+              <Widget>[
+                if (query.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: GallerySearchResultsHeader(
+                      totalHits: totalHits,
+                      query: query,
+                    ),
+                  ),
+                _GroupsSliver(groups: groups, underHeader: query.isNotEmpty),
+                SliverToBoxAdapter(
+                  child: GalleryFeedFooter(
+                    status: status,
+                    nextPage: nextPage,
+                    onRetry: controller.retryLoadMore,
+                  ),
+                ),
+              ],
+            GalleryFailure(:final error) => <Widget>[
+              SliverToBoxAdapter(
+                child: GalleryErrorView(
+                  error: error,
+                  onRetry: controller.retry,
+                ),
+              ),
             ],
-          GalleryFailure(:final error) => <Widget>[
-            SliverToBoxAdapter(
-              child: GalleryErrorView(error: error, onRetry: controller.retry),
-            ),
-          ],
-        },
-      ],
+          },
+        ],
+      ),
     );
   }
 }
@@ -130,9 +196,6 @@ class _GroupsSliver extends StatelessWidget {
 
   final bool underHeader;
 
-  /// Room for the floating tab pill above the last group.
-  static const double bottomSpacer = 120;
-
   @override
   Widget build(BuildContext context) {
     return SliverPadding(
@@ -140,7 +203,7 @@ class _GroupsSliver extends StatelessWidget {
         AppSpacing.gutter,
         underHeader ? AppSpacing.lg - 2 : AppSpacing.xl,
         AppSpacing.gutter,
-        bottomSpacer,
+        0,
       ),
       sliver: SliverList.separated(
         itemCount: groups.length,

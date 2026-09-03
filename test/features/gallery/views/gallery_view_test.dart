@@ -8,13 +8,16 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:pixabay_image_browser/features/gallery/controllers/gallery_controller.dart';
+import 'package:pixabay_image_browser/features/gallery/controllers/gallery_state.dart';
 import 'package:pixabay_image_browser/features/gallery/models/pixabay_page.dart';
 import 'package:pixabay_image_browser/features/gallery/repositories/gallery_repository.dart';
 import 'package:pixabay_image_browser/features/gallery/services/pixabay_exception.dart';
 import 'package:pixabay_image_browser/features/gallery/views/gallery_view.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/gallery_chips.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/gallery_error_view.dart';
+import 'package:pixabay_image_browser/features/gallery/widgets/gallery_feed_footer.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/gallery_image_group.dart';
+import 'package:pixabay_image_browser/features/gallery/widgets/gallery_refresh_pill.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/gallery_search_empty_view.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/gallery_search_field.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/gallery_search_results_header.dart';
@@ -358,6 +361,9 @@ void main() {
       when(
         () => repository.getImages(query: 'fog'),
       ).thenAnswer((_) async => pageWith(20));
+      when(
+        () => repository.getImages(query: 'fog', page: 2, perPage: 20),
+      ).thenAnswer((_) async => pageWith(0));
       await typeAndWait(tester, 'fog');
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -2000));
       await tester.pump();
@@ -372,6 +378,7 @@ void main() {
 
       await tester.drag(find.byType(CustomScrollView), const Offset(0, 2000));
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('Aperture'), findsOneWidget);
     });
@@ -383,6 +390,9 @@ void main() {
       when(
         () => repository.getImages(query: 'fog'),
       ).thenAnswer((_) async => pageWith(20));
+      when(
+        () => repository.getImages(query: 'fog', page: 2, perPage: 20),
+      ).thenAnswer((_) async => pageWith(0));
       await typeAndWait(tester, 'fog');
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -2000));
       await tester.pump();
@@ -409,6 +419,374 @@ void main() {
 
       expect(find.text(GalleryErrorView.apiTitle), findsOneWidget);
       expect(find.text('HTTP 500 · /api/?q=fog'), findsOneWidget);
+    });
+  });
+
+  group('pagination and refresh', () {
+    PixabayPage pageWith(
+      int count, {
+      int firstId = 100,
+      int totalHits = 500,
+      String tags = 'blossom, bloom, flower',
+    }) {
+      return PixabayPage.fromJson(<String, dynamic>{
+        'total': 4692,
+        'totalHits': totalHits,
+        'hits': <Map<String, dynamic>>[
+          for (var i = 0; i < count; i++)
+            sampleHit(id: firstId + i, tags: tags),
+        ],
+      });
+    }
+
+    Future<void> pumpLoadedFeed(WidgetTester tester, {int hits = 4}) async {
+      when(repository.getImages).thenAnswer((_) async => pageWith(hits));
+      await pumpGallery(tester);
+      expect(find.byType(GalleryChips), findsOneWidget);
+    }
+
+    Future<void> typeAndWait(WidgetTester tester, String text) async {
+      await tester.enterText(find.byType(TextField), text);
+      await tester.pump(GalleryController.debounceDuration);
+      await tester.pump();
+    }
+
+    void jumpToBottom() {
+      final scroll = Get.find<GalleryController>().scrollController;
+      scroll.jumpTo(scroll.position.maxScrollExtent);
+    }
+
+    testWidgets(
+      'jumping to the bottom shows the footer spinner and PAGE 2, then appends',
+      (tester) async {
+        await pumpLoadedFeed(tester, hits: 20);
+        final pending = Completer<PixabayPage>();
+        when(
+          () => repository.getImages(query: '', page: 2, perPage: 20),
+        ).thenAnswer((_) => pending.future);
+
+        jumpToBottom();
+        await tester.pump();
+        jumpToBottom();
+        await tester.pump();
+
+        expect(
+          find.text(GalleryFeedFooter.pageLabel(2).toUpperCase()),
+          findsOneWidget,
+        );
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+        pending.complete(
+          pageWith(
+            20,
+            firstId: 2000,
+            tags: 'glacier, ice, peak',
+            totalHits: 40,
+          ),
+        );
+        await tester.pump();
+
+        expect(
+          Get.find<GalleryController>().state.value,
+          isA<GalleryLoaded>().having((s) => s.images, 'images', hasLength(40)),
+        );
+        final loaded = Get.find<GalleryController>().state.value;
+        expect(loaded, isA<GalleryLoaded>());
+        if (loaded is! GalleryLoaded) {
+          return;
+        }
+        expect(loaded.images.last.title, 'Glacier · ice · peak');
+
+        jumpToBottom();
+        await tester.pump();
+        jumpToBottom();
+        await tester.pump();
+
+        expect(find.text(loaded.images.last.title), findsWidgets);
+      },
+    );
+
+    testWidgets('a real drag to the bottom requests page 2', (tester) async {
+      await pumpLoadedFeed(tester, hits: 20);
+      when(
+        () => repository.getImages(query: '', page: 2, perPage: 20),
+      ).thenAnswer((_) async => pageWith(20, firstId: 2000));
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -6000));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+
+      verify(
+        () => repository.getImages(query: '', page: 2, perPage: 20),
+      ).called(1);
+    });
+
+    testWidgets(
+      'a failed page 2 keeps groups on screen and Try again re-requests page 2',
+      (tester) async {
+        await pumpLoadedFeed(tester, hits: 20);
+        final retry = Completer<PixabayPage>();
+        var calls = 0;
+        when(
+          () => repository.getImages(query: '', page: 2, perPage: 20),
+        ).thenAnswer((_) {
+          calls++;
+          if (calls == 1) {
+            return Future<PixabayPage>.error(const PixabayNetworkException());
+          }
+          return retry.future;
+        });
+
+        jumpToBottom();
+        await tester.pump();
+        jumpToBottom();
+        await tester.pump();
+
+        expect(
+          find.byType(GalleryImageGroup, skipOffstage: false),
+          findsAtLeastNWidgets(1),
+        );
+        expect(find.byType(GalleryErrorView), findsNothing);
+        expect(
+          find.text(GalleryFeedFooter.failedLabel(2).toUpperCase()),
+          findsOneWidget,
+        );
+        expect(find.text(GalleryFeedFooter.retryLabel), findsOneWidget);
+
+        await tester.tap(find.text(GalleryFeedFooter.retryLabel));
+        await tester.pump();
+
+        verify(
+          () => repository.getImages(query: '', page: 2, perPage: 20),
+        ).called(2);
+        expect(
+          find.text(GalleryFeedFooter.pageLabel(2).toUpperCase()),
+          findsOneWidget,
+        );
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'END OF RESULTS appears when page 2 exhausts totalHits; no page 3',
+      (tester) async {
+        await pumpLoadedFeed(tester, hits: 20);
+        when(
+          () => repository.getImages(query: '', page: 2, perPage: 20),
+        ).thenAnswer((_) async => pageWith(20, firstId: 2000, totalHits: 40));
+
+        jumpToBottom();
+        await tester.pump();
+        jumpToBottom();
+        await tester.pump();
+
+        expect(
+          find.text(GalleryFeedFooter.endLabel.toUpperCase()),
+          findsOneWidget,
+        );
+        verifyNever(
+          () => repository.getImages(query: '', page: 3, perPage: 20),
+        );
+      },
+    );
+
+    testWidgets(
+      'the header shows REFRESH; tapping it refreshes page 1 without a skeleton',
+      (tester) async {
+        await pumpLoadedFeed(tester);
+        expect(find.text('REFRESH'), findsOneWidget);
+
+        final pending = Completer<PixabayPage>();
+        when(repository.getImages).thenAnswer((_) => pending.future);
+
+        await tester.tap(find.text('REFRESH'));
+        await tester.pump();
+
+        expect(find.text(GalleryRefreshPill.refreshingLabel), findsOneWidget);
+        expect(find.byType(GalleryImageGroup), findsAtLeastNWidgets(1));
+        expect(find.byType(GallerySkeleton), findsNothing);
+
+        verify(
+          () => repository.getImages(query: '', page: 1, perPage: 20),
+        ).called(2);
+      },
+    );
+
+    testWidgets('pull gesture calls page 1 a second time', (tester) async {
+      await pumpLoadedFeed(tester, hits: 20);
+      when(
+        () => repository.getImages(query: '', page: 2, perPage: 20),
+      ).thenAnswer((_) async => pageWith(0));
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, 300));
+      await tester.pump();
+
+      verify(
+        () => repository.getImages(query: '', page: 1, perPage: 20),
+      ).called(2);
+    });
+
+    testWidgets(
+      'pull-to-refresh during an active search keeps the field and re-requests',
+      (tester) async {
+        await pumpLoadedFeed(tester, hits: 20);
+        when(
+          () => repository.getImages(query: 'fog'),
+        ).thenAnswer((_) async => pageWith(20));
+        when(
+          () => repository.getImages(query: 'fog', page: 2, perPage: 20),
+        ).thenAnswer((_) async => pageWith(0));
+        await typeAndWait(tester, 'fog');
+
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, 300));
+        await tester.pump();
+
+        expect(
+          tester
+              .widget<EditableText>(find.byType(EditableText))
+              .controller
+              .text,
+          'fog',
+        );
+        verify(
+          () => repository.getImages(query: 'fog', page: 1, perPage: 20),
+        ).called(2);
+      },
+    );
+
+    testWidgets(
+      'a 4-hit feed shorter than the threshold never triggers page 2',
+      (tester) async {
+        await pumpLoadedFeed(tester);
+        await tester.pump();
+
+        verifyNever(
+          () => repository.getImages(query: '', page: 2, perPage: 20),
+        );
+      },
+    );
+
+    testWidgets(
+      'tapping the active Explore tab scrolls a loaded feed back to the header',
+      (tester) async {
+        await pumpLoadedFeed(tester, hits: 20);
+        when(
+          () => repository.getImages(query: '', page: 2, perPage: 20),
+        ).thenAnswer((_) async => pageWith(0));
+
+        jumpToBottom();
+        await tester.pump();
+        expect(find.text('Aperture'), findsNothing);
+
+        await tester.tap(find.bySemanticsLabel(GlassTabBar.activeTabLabel));
+        await tester.pump();
+        await tester.pump(GalleryController.scrollToTopDuration);
+
+        expect(find.text('Aperture'), findsOneWidget);
+        expect(Get.find<GalleryController>().scrollController.offset, 0);
+      },
+    );
+
+    testWidgets(
+      'tapping the active Explore tab during search keeps the query',
+      (tester) async {
+        await pumpLoadedFeed(tester, hits: 20);
+        when(
+          () => repository.getImages(query: 'fog'),
+        ).thenAnswer((_) async => pageWith(20));
+        when(
+          () => repository.getImages(query: 'fog', page: 2, perPage: 20),
+        ).thenAnswer((_) async => pageWith(0));
+        await typeAndWait(tester, 'fog');
+
+        jumpToBottom();
+        await tester.pump();
+        expect(find.text('Aperture'), findsNothing);
+
+        await tester.tap(find.bySemanticsLabel(GlassTabBar.activeTabLabel));
+        await tester.pump();
+        await tester.pump(GalleryController.scrollToTopDuration);
+
+        expect(find.text('Aperture'), findsOneWidget);
+        expect(Get.find<GalleryController>().scrollController.offset, 0);
+        expect(
+          tester
+              .widget<EditableText>(find.byType(EditableText))
+              .controller
+              .text,
+          'fog',
+        );
+        expect(
+          find.text(GallerySearchResultsHeader.queryLabel('fog')),
+          findsOneWidget,
+        );
+      },
+    );
+  });
+
+  group('pull gating', () {
+    PixabayPage pageWith(int count) =>
+        PixabayPage.fromJson(samplePage(hitCount: count));
+
+    testWidgets('a fling that bounces at the top does not refresh', (
+      tester,
+    ) async {
+      when(repository.getImages).thenAnswer((_) async => pageWith(20));
+      when(
+        () => repository.getImages(query: '', page: 2, perPage: 20),
+      ).thenAnswer((_) async => pageWith(0));
+      await pumpGallery(tester);
+      final scroll = Get.find<GalleryController>().scrollController;
+      scroll.jumpTo(1500);
+      await tester.pump();
+
+      // short drag, high velocity: the ballistic part reaches the top and
+      // overshoots the 64px trigger with no finger down
+      await tester.fling(
+        find.byType(CustomScrollView),
+        const Offset(0, 200),
+        8000,
+      );
+      for (var i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(scroll.offset, lessThanOrEqualTo(0));
+      verify(
+        () => repository.getImages(query: '', page: 1, perPage: 20),
+      ).called(1);
+    });
+  });
+
+  group('keyboard', () {
+    PixabayPage pageWith(int count) =>
+        PixabayPage.fromJson(samplePage(hitCount: count));
+
+    testWidgets('dragging the results dismisses the keyboard', (tester) async {
+      when(repository.getImages).thenAnswer((_) async => pageWith(20));
+      when(
+        () => repository.getImages(query: 'fog'),
+      ).thenAnswer((_) async => pageWith(20));
+      when(
+        () => repository.getImages(query: 'fog', page: 2, perPage: 20),
+      ).thenAnswer((_) async => pageWith(0));
+      await pumpGallery(tester);
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      await tester.enterText(find.byType(TextField), 'fog');
+      await tester.pump(GalleryController.debounceDuration);
+      await tester.pump();
+      final editable = tester.widget<EditableText>(find.byType(EditableText));
+      expect(editable.focusNode.hasFocus, isTrue);
+      expect(find.text(GallerySearchField.cancelLabel), findsOneWidget);
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+      await tester.pump();
+
+      expect(editable.focusNode.hasFocus, isFalse);
+      expect(find.text(GallerySearchField.cancelLabel), findsNothing);
+      expect(editable.controller.text, 'fog');
     });
   });
 }
