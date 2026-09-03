@@ -3,17 +3,25 @@ import '../services/pixabay_exception.dart';
 
 /// The Gallery screen is always in exactly one of these states.
 sealed class GalleryState {
-  const GalleryState();
+  const GalleryState({this.query = ''});
+
+  // empty = curated feed
+  final String query;
+
+  bool get isSearch => query.isNotEmpty;
 }
 
 final class GalleryLoading extends GalleryState {
-  const GalleryLoading();
+  const GalleryLoading({super.query});
 }
 
 final class GalleryLoaded extends GalleryState {
-  const GalleryLoaded(this.images);
+  const GalleryLoaded(this.images, {super.query, this.totalHits = 0});
 
   final List<PixabayImage> images;
+
+  // capped at 500 by pixabay
+  final int totalHits;
 
   /// The feed is laid out in groups of four: one hero followed by up to
   /// three square tiles. A trailing group may be partial.
@@ -33,7 +41,7 @@ final class GalleryLoaded extends GalleryState {
 }
 
 final class GalleryFailure extends GalleryState {
-  const GalleryFailure(this.error);
+  const GalleryFailure(this.error, {super.query});
 
   final PixabayException error;
 }

@@ -85,6 +85,17 @@ void main() {
     expect(parameters.containsKey('editors_choice'), isFalse);
   });
 
+  test('a query with spaces and symbols is URL-encoded by Dio', () async {
+    answerWith(jsonEncode(samplePage()), 200);
+
+    await service.fetchImages(query: 'black & white café');
+
+    final uri = capturedRequest().uri;
+    expect(uri.query, contains('q=black+%26+white+caf%C3%A9'));
+    expect(uri.queryParameters['q'], 'black & white café');
+    expect(uri.queryParameters.containsKey('editors_choice'), isFalse);
+  });
+
   test('maps a 400 plain-text body to PixabayApiException', () async {
     answerWith('[ERROR 400] Invalid or missing API key', 400, json: false);
 
