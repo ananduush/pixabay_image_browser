@@ -207,7 +207,7 @@ void main() {
         expect(controller.state.value, isA<GalleryLoaded>());
         verifyNever(
           () => repository.getImages(
-            query: any(named: 'query', that: isNotNull),
+            query: any(named: 'query', that: isNotEmpty),
           ),
         );
 
@@ -254,7 +254,7 @@ void main() {
         verify(repository.getImages).called(1);
         verifyNever(
           () => repository.getImages(
-            query: any(named: 'query', that: isNotNull),
+            query: any(named: 'query', that: isNotEmpty),
           ),
         );
       });
@@ -271,7 +271,7 @@ void main() {
 
         verifyNever(
           () => repository.getImages(
-            query: any(named: 'query', that: isNotNull),
+            query: any(named: 'query', that: isNotEmpty),
           ),
         );
         expect(controller.state.value.isSearch, isFalse);
@@ -356,7 +356,7 @@ void main() {
       verify(repository.getImages).called(2);
       verifyNever(
         () => repository.getImages(
-          query: any(named: 'query', that: isNotNull),
+          query: any(named: 'query', that: isNotEmpty),
         ),
       );
     });
@@ -661,7 +661,7 @@ void main() {
         );
         when(
           () => repository.getImages(
-            query: any(named: 'query', that: isNotNull),
+            query: any(named: 'query', that: isNotEmpty),
           ),
         ).thenAnswer(
           (_) => Future<PixabayPage>.error(const PixabayMissingKeyException()),

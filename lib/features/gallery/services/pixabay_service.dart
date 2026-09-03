@@ -31,13 +31,13 @@ class PixabayService {
   /// Fetches one page of photos. Without [query] this is the curated feed
   /// (editor's choice, most popular first).
   Future<PixabayPage> fetchImages({
-    String? query,
+    String query = '',
     int page = 1,
     int perPage = 20,
   }) async {
     if (_apiKey.isEmpty) throw const PixabayMissingKeyException();
 
-    final hasQuery = query != null && query.trim().isNotEmpty;
+    final hasQuery = query.trim().isNotEmpty;
     // Mirrors the distinguishing parameter actually sent, minus the API key.
     final requestLabel = hasQuery
         ? '$apiPath?q=${Uri.encodeQueryComponent(query.trim())}'

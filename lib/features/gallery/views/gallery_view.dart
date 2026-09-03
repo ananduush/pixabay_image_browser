@@ -59,6 +59,7 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = this.state;
     return CustomScrollView(
+      controller: controller.scrollController,
       slivers: <Widget>[
         SliverToBoxAdapter(
           child: Column(

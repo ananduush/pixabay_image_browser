@@ -20,6 +20,7 @@ class GalleryController extends GetxController {
   final TextEditingController searchController = TextEditingController();
 
   final FocusNode searchFocus = FocusNode();
+  final ScrollController scrollController = ScrollController();
 
   // last curated page, restored on clear
   List<PixabayImage>? _exploreImages;
@@ -42,6 +43,7 @@ class GalleryController extends GetxController {
     _debounce?.cancel();
     searchController.dispose();
     searchFocus.dispose();
+    scrollController.dispose();
     super.onClose();
   }
 
@@ -115,6 +117,7 @@ class GalleryController extends GetxController {
   void _showExplore() {
     if (!state.value.isSearch) return;
     _requestId++;
+    if (scrollController.hasClients) scrollController.jumpTo(0);
     final cached = _exploreImages;
     if (cached != null) {
       state.value = GalleryLoaded(cached);
@@ -127,9 +130,7 @@ class GalleryController extends GetxController {
     final id = ++_requestId;
     state.value = GalleryLoading(query: query);
     try {
-      final page = await _repository.getImages(
-        query: query.isEmpty ? null : query,
-      );
+      final page = await _repository.getImages(query: query);
       // cache even if stale, clear can reuse it
       if (query.isEmpty) _exploreImages = page.hits;
       if (id != _requestId) return;

@@ -376,6 +376,25 @@ void main() {
       expect(find.text('Aperture'), findsOneWidget);
     });
 
+    testWidgets('clearing a scrolled result list lands on the header', (
+      tester,
+    ) async {
+      await pumpLoadedFeed(tester, hits: 20);
+      when(
+        () => repository.getImages(query: 'fog'),
+      ).thenAnswer((_) async => pageWith(20));
+      await typeAndWait(tester, 'fog');
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -2000));
+      await tester.pump();
+      expect(find.text('Aperture'), findsNothing);
+
+      Get.find<GalleryController>().clearSearch();
+      await tester.pump();
+
+      expect(find.text('Aperture'), findsOneWidget);
+      expect(find.byType(GalleryChips), findsOneWidget);
+    });
+
     testWidgets('the API error caption names the searched query', (
       tester,
     ) async {

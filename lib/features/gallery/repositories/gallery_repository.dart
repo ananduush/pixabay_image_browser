@@ -9,7 +9,7 @@ class GalleryRepository {
   final PixabayService _service;
 
   Future<PixabayPage> getImages({
-    String? query,
+    String query = '',
     int page = 1,
     int perPage = 20,
   }) {

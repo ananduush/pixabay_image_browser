@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import 'gallery_state_view.dart';
 
 /// zero-hit search state
 class GallerySearchEmptyView extends StatelessWidget {
@@ -32,56 +33,44 @@ class GallerySearchEmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.xxl, 96, AppSpacing.xxl, 0),
-      child: Column(
-        children: <Widget>[
-          const Icon(Icons.search_off, size: 36, color: AppColors.rule35),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            title(query),
-            textAlign: TextAlign.center,
-            style: AppTypography.stateTitle,
-          ),
-          const SizedBox(height: 9),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: AppTypography.stateBody,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            alignment: WrapAlignment.center,
-            children: <Widget>[
-              for (final term in suggestions)
-                _SuggestionPill(term: term, onTap: () => onSuggestion(term)),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          GestureDetector(
-            onTap: onBack,
-            behavior: HitTestBehavior.opaque,
-            child: SizedBox(
-              height: 44,
-              child: Center(
-                widthFactor: 1,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 1,
-                  ),
-                  decoration: const BoxDecoration(
-                    border: Border(bottom: BorderSide(color: AppColors.rule20)),
-                  ),
-                  child: Text(backLabel, style: AppTypography.link),
+    return GalleryStateView(
+      glyph: const Icon(Icons.search_off, size: 36, color: AppColors.rule35),
+      title: title(query),
+      body: body,
+      topPadding: 96,
+      children: <Widget>[
+        const SizedBox(height: AppSpacing.lg),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          alignment: WrapAlignment.center,
+          children: <Widget>[
+            for (final term in suggestions)
+              _SuggestionPill(term: term, onTap: () => onSuggestion(term)),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        GestureDetector(
+          onTap: onBack,
+          behavior: HitTestBehavior.opaque,
+          child: SizedBox(
+            height: 44,
+            child: Center(
+              widthFactor: 1,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 1,
                 ),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: AppColors.rule20)),
+                ),
+                child: Text(backLabel, style: AppTypography.link),
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

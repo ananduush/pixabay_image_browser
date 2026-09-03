@@ -39,60 +39,64 @@ class GallerySearchField extends StatelessWidget {
         AppSpacing.gutter,
         0,
       ),
-      child: ListenableBuilder(
-        listenable: Listenable.merge(<Listenable>[controller, focusNode]),
-        builder: (BuildContext context, Widget? child) {
-          final hasText = controller.text.isNotEmpty;
-          return Row(
-            spacing: 12,
-            children: <Widget>[
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.only(bottom: 9),
-                  decoration: const BoxDecoration(
-                    border: Border(bottom: BorderSide(color: AppColors.rule50)),
-                  ),
-                  child: Row(
-                    spacing: 10,
-                    children: <Widget>[
-                      const Icon(Icons.search, size: 16, color: AppColors.ink),
-                      Expanded(
-                        child: TextField(
-                          controller: controller,
-                          focusNode: focusNode,
-                          onChanged: onChanged,
-                          onSubmitted: onSubmitted,
-                          textInputAction: TextInputAction.search,
-                          style: AppTypography.body,
-                          cursorColor: AppColors.ink,
-                          decoration: InputDecoration.collapsed(
-                            hintText: GallerySearchField.placeholder,
-                            hintStyle: AppTypography.body.copyWith(
-                              color: AppColors.text56,
-                            ),
-                          ),
+      child: Row(
+        spacing: 12,
+        children: <Widget>[
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.only(bottom: 9),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: AppColors.rule50)),
+              ),
+              child: Row(
+                spacing: 10,
+                children: <Widget>[
+                  const Icon(Icons.search, size: 16, color: AppColors.ink),
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      onChanged: onChanged,
+                      onSubmitted: onSubmitted,
+                      textInputAction: TextInputAction.search,
+                      style: AppTypography.body,
+                      cursorColor: AppColors.ink,
+                      decoration: InputDecoration.collapsed(
+                        hintText: GallerySearchField.placeholder,
+                        hintStyle: AppTypography.body.copyWith(
+                          color: AppColors.text56,
                         ),
                       ),
-                      if (hasText) _ClearPill(onTap: onClear),
-                    ],
-                  ),
-                ),
-              ),
-              if (focusNode.hasFocus)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 9),
-                  child: GestureDetector(
-                    onTap: onCancel,
-                    behavior: HitTestBehavior.opaque,
-                    child: Text(
-                      GallerySearchField.cancelLabel,
-                      style: AppTypography.cancel,
                     ),
                   ),
-                ),
-            ],
-          );
-        },
+                  ListenableBuilder(
+                    listenable: controller,
+                    builder: (BuildContext context, Widget? child) =>
+                        controller.text.isEmpty
+                        ? const SizedBox.shrink()
+                        : _ClearPill(onTap: onClear),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          ListenableBuilder(
+            listenable: focusNode,
+            builder: (BuildContext context, Widget? child) => focusNode.hasFocus
+                ? Padding(
+                    padding: const EdgeInsets.only(bottom: 9),
+                    child: GestureDetector(
+                      onTap: onCancel,
+                      behavior: HitTestBehavior.opaque,
+                      child: Text(
+                        GallerySearchField.cancelLabel,
+                        style: AppTypography.cancel,
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
       ),
     );
   }
