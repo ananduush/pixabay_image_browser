@@ -175,7 +175,6 @@ void main() {
   group('search', () {
     const debounce = GalleryController.debounceDuration;
 
-    /// A controller whose curated feed has already loaded (and is cached).
     GalleryController exploreLoaded(FakeAsync async, {int hits = 3}) {
       when(repository.getImages).thenAnswer((_) async => pageWith(hits));
       final controller = GalleryController(repository: repository)..onInit();
@@ -190,8 +189,7 @@ void main() {
       ).thenAnswer((_) async => pageWith(hits));
     }
 
-    /// What the TextField does on a keystroke: update the controller's
-    /// text, then report the change.
+    // same as a keystroke in the text field
     void type(GalleryController controller, String text) {
       controller.searchController.text = text;
       controller.onQueryChanged(text);
@@ -342,7 +340,6 @@ void main() {
           (GalleryLoaded, 'fog'),
         ]);
         verify(() => repository.getImages(query: 'fog')).called(2);
-        // Retrying a search never falls back to the curated feed.
         verify(repository.getImages).called(1);
       });
     });
@@ -387,7 +384,6 @@ void main() {
 
     test('clearing with nothing cached reloads the curated feed', () {
       fakeAsync((async) {
-        // Explore never finished, so there is no page to restore.
         final explore = Completer<PixabayPage>();
         when(repository.getImages).thenAnswer((_) => explore.future);
         final controller = GalleryController(repository: repository)..onInit();
@@ -440,7 +436,6 @@ void main() {
 
         type(controller, 'mount');
         async.elapse(debounce);
-        // The second search is issued while the first is still in flight.
         type(controller, 'mountains');
         async.elapse(debounce);
         verify(() => repository.getImages(query: 'mount')).called(1);
@@ -498,7 +493,6 @@ void main() {
         );
         verify(() => repository.getImages(query: 'ceramic')).called(1);
 
-        // Repeating the term already shown is a no-op.
         unawaited(controller.search('ceramic'));
         async.flushMicrotasks();
         verifyNever(() => repository.getImages(query: 'ceramic'));
@@ -560,7 +554,6 @@ void main() {
         async.elapse(debounce);
         expect(controller.state.value, isA<GalleryFailure>());
 
-        // Edit away and back before the debounce fires: "fog" again.
         type(controller, 'fogs');
         async.elapse(debounce ~/ 2);
         type(controller, 'fog');
@@ -620,7 +613,6 @@ void main() {
           isA<GalleryLoaded>().having((s) => s.query, 'query', 'fog'),
         );
 
-        // The superseded curated response lands now.
         explore.complete(pageWith(3));
         async.flushMicrotasks();
         expect(controller.state.value.query, 'fog');
@@ -648,7 +640,6 @@ void main() {
         async.elapse(debounce);
         expect(controller.state.value, isA<GalleryFailure>());
 
-        // Keep typing, then tap "Try again" before the debounce fires.
         type(controller, 'fogs');
         unawaited(controller.retry());
         async.flushMicrotasks();

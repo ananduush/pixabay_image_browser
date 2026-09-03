@@ -4,13 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// The search row from the design: glyph, borderless input on a bottom
-/// rule, a round clear pill while there is text, and "Cancel" while the
-/// keyboard is up.
-///
-/// Text and focus both live in controller-owned objects ([controller],
-/// [focusNode]) so search logic can drive the field and dismiss the
-/// keyboard from any exit.
+/// search row: glyph, input, clear pill, cancel
 class GallerySearchField extends StatelessWidget {
   const GallerySearchField({
     super.key,
@@ -27,16 +21,13 @@ class GallerySearchField extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final ValueChanged<String> onSubmitted;
 
-  /// The clear pill: empties the query, keeps the keyboard.
   final VoidCallback onClear;
 
-  /// Cancel: empties the query and dismisses the keyboard.
   final VoidCallback onCancel;
 
   static const String placeholder = 'Search a subject, a mood, a colour';
   static const String cancelLabel = 'Cancel';
 
-  /// Accessibility label of the clear pill.
   static const String clearLabel = 'Clear search';
 
   @override
@@ -107,7 +98,6 @@ class GallerySearchField extends StatelessWidget {
   }
 }
 
-/// 20px round "×" that clears the query.
 class _ClearPill extends StatelessWidget {
   const _ClearPill({required this.onTap});
 

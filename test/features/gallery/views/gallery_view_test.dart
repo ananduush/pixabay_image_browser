@@ -26,8 +26,7 @@ import '../../../support/pixabay_fixtures.dart';
 
 class _MockRepository extends Mock implements GalleryRepository {}
 
-/// Keeps image tiles on their placeholder: no disk cache, no HTTP, no
-/// pending timers, so the loaded feed can be pumped in tests.
+// keeps tiles on the placeholder, no disk or http
 class _FakeCacheManager extends Mock implements BaseCacheManager {}
 
 void main() {
@@ -84,7 +83,6 @@ void main() {
     await pumpGallery(tester);
 
     expect(find.text(GalleryErrorView.offlineTitle), findsOneWidget);
-    // The field stays available so a search can still be started later.
     expect(find.byType(GallerySearchField), findsOneWidget);
 
     await tester.tap(find.text(GalleryErrorView.retryLabel));
@@ -135,7 +133,6 @@ void main() {
     PixabayPage pageWith(int count) =>
         PixabayPage.fromJson(samplePage(hitCount: count));
 
-    /// Pumps the view with a loaded curated feed of [hits] images.
     Future<void> pumpLoadedFeed(WidgetTester tester, {int hits = 4}) async {
       when(repository.getImages).thenAnswer((_) async => pageWith(hits));
       await pumpGallery(tester);
@@ -201,7 +198,7 @@ void main() {
         find.text(GallerySearchResultsHeader.queryLabel('fog')),
         findsOneWidget,
       );
-      // The sliver list is lazy; only the first group fits the test viewport.
+      // lazy sliver, only one group fits
       expect(find.byType(GalleryImageGroup), findsAtLeastNWidgets(1));
       expect(find.byType(GalleryChips), findsNothing);
       expect(
@@ -354,7 +351,6 @@ void main() {
     testWidgets('the skeleton can be scrolled back to the header', (
       tester,
     ) async {
-      // Explore fails first, so there is no cached page to restore.
       when(repository.getImages).thenAnswer(
         (_) => Future<PixabayPage>.error(const PixabayNetworkException()),
       );
@@ -367,11 +363,9 @@ void main() {
       await tester.pump();
       expect(find.text('Aperture'), findsNothing);
 
-      // Clearing with nothing cached reloads the feed: skeleton, and the
-      // user must be able to get back to the top.
       final reload = Completer<PixabayPage>();
       when(repository.getImages).thenAnswer((_) => reload.future);
-      // The clear pill is off-screen here, so clear through the controller.
+      // pill is off-screen here
       Get.find<GalleryController>().clearSearch();
       await tester.pump();
       expect(find.byType(GallerySkeleton), findsOneWidget);

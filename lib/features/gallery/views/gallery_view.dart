@@ -17,8 +17,7 @@ import '../widgets/gallery_searching_view.dart';
 import '../widgets/gallery_skeleton.dart';
 import '../widgets/glass_tab_bar.dart';
 
-/// Explore tab: the Pixabay feed in the Aperture layout, with search as a
-/// mode of the same screen.
+/// Explore tab: the Pixabay feed in the Aperture layout.
 class GalleryView extends GetView<GalleryController> {
   const GalleryView({super.key});
 
@@ -48,10 +47,8 @@ class GalleryView extends GetView<GalleryController> {
   }
 }
 
-/// One scroll view for every state. The header and search field always sit
-/// in the first sliver, so the text field's element (and with it focus,
-/// keyboard and selection) survives Loading ↔ Loaded ↔ Failure swaps while
-/// the user is typing. Only the slivers after it change.
+// header + search field stay in the first sliver so the text field
+// keeps focus across state changes
 class _Body extends StatelessWidget {
   const _Body({required this.state, required this.controller});
 
@@ -61,9 +58,6 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = this.state;
-    // No per-state physics: the scroll offset carries across state swaps,
-    // and a non-scrollable skeleton could pin it mid-page with the header
-    // off-screen.
     return CustomScrollView(
       slivers: <Widget>[
         SliverToBoxAdapter(
@@ -83,8 +77,6 @@ class _Body extends StatelessWidget {
                 onClear: controller.clearSearch,
                 onCancel: controller.cancelSearch,
               ),
-              // Chips belong to the curated feed only; the design hides them
-              // while a search is active.
               if (state case GalleryLoaded(isSearch: false))
                 const GalleryChips(),
             ],
@@ -130,14 +122,11 @@ class _Body extends StatelessWidget {
   }
 }
 
-/// The hero + trio groups, shared by the curated feed and search results.
 class _GroupsSliver extends StatelessWidget {
   const _GroupsSliver({required this.groups, required this.underHeader});
 
   final List<List<PixabayImage>> groups;
 
-  /// Search results sit closer to their header than the feed does to the
-  /// chips (the design pulls the header up by 6).
   final bool underHeader;
 
   /// Room for the floating tab pill above the last group.

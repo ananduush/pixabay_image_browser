@@ -4,8 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// In-flight search from the design: a thin ring spinner over a caption
-/// naming the query, so the user sees what is being looked up.
+/// spinner + caption while a search is in flight
 class GallerySearchingView extends StatelessWidget {
   const GallerySearchingView({super.key, required this.query});
 

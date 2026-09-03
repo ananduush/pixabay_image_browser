@@ -40,7 +40,6 @@ void main() {
             onChanged: changes.add,
             onSubmitted: submissions.add,
             onClear: () => clears++,
-            // The real controller also unfocuses; mirror that here.
             onCancel: () {
               cancels++;
               focusNode.unfocus();

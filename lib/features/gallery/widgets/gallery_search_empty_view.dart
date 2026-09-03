@@ -4,9 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// Zero-hit search from the design: "suggestions, not a dead end". Keeps
-/// the query visible, offers a few known-good terms and a way back to the
-/// curated feed.
+/// zero-hit search state
 class GallerySearchEmptyView extends StatelessWidget {
   const GallerySearchEmptyView({
     super.key,
@@ -88,7 +86,6 @@ class GallerySearchEmptyView extends StatelessWidget {
   }
 }
 
-/// Filled 16px-radius chip: ink text on the 5.5% ink fill.
 class _SuggestionPill extends StatelessWidget {
   const _SuggestionPill({required this.term, required this.onTap});
 

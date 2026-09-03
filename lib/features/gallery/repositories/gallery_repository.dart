@@ -8,8 +8,6 @@ class GalleryRepository {
 
   final PixabayService _service;
 
-  /// Without [query] this is the curated feed; with one it is a keyword
-  /// search across all of Pixabay.
   Future<PixabayPage> getImages({
     String? query,
     int page = 1,

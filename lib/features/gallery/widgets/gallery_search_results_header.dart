@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// "N images · for “query”" line above search results.
+/// "N images for “query”"
 class GallerySearchResultsHeader extends StatelessWidget {
   const GallerySearchResultsHeader({
     super.key,

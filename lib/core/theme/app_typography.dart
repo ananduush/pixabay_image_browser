@@ -89,23 +89,21 @@ abstract final class AppTypography {
   /// Header trailing label — Instrument Sans 10.5, +.06em, uppercase.
   static TextStyle get headerLabel => label(10.5);
 
-  // Roles added by the Search slice.
-
-  /// Search "Cancel" — Instrument Sans 14.
+  /// search cancel — Instrument Sans 14.
   static TextStyle get cancel => sans(14);
 
-  /// "Searching Pixabay for …" caption — Instrument Sans 12.5.
+  /// searching caption — Instrument Sans 12.5.
   static TextStyle get searchStatus => sans(12.5, color: AppColors.text62);
 
-  /// Results header count — Newsreader 18.
+  /// result count — Newsreader 18.
   static TextStyle get resultCount => serif(18);
 
-  /// Results header "for “…”" — Instrument Sans 12.
+  /// result query — Instrument Sans 12.
   static TextStyle get resultQuery => sans(12, color: AppColors.text56);
 
-  /// Suggestion pill — Instrument Sans 13.
+  /// suggestion pill — Instrument Sans 13.
   static TextStyle get suggestion => sans(13);
 
-  /// Empty-state text link ("Back to browsing") — Instrument Sans 13.5.
+  /// text link — Instrument Sans 13.5.
   static TextStyle get link => sans(13.5, color: AppColors.text62);
 }
