@@ -147,8 +147,8 @@ class GalleryController extends GetxController {
     return refreshFeed();
   }
 
-  /// Pull-to-refresh and the header label: page 1 of the current query
-  /// again, current images staying visible meanwhile. (Not `refresh` —
+  /// Page 1 of the current query again, current images staying visible
+  /// meanwhile. Reached only through [refreshFromPull]. (Not `refresh` —
   /// that name is GetX's notifier hook behind `update()`.)
   Future<void> refreshFeed() {
     switch (state.value) {

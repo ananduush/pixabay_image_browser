@@ -24,7 +24,7 @@ import '../widgets/glass_tab_bar.dart';
 class GalleryView extends GetView<GalleryController> {
   const GalleryView({super.key});
 
-  static const String headerLabel = 'Refresh';
+  static const String headerLabel = 'Pixabay';
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +117,6 @@ class _Body extends StatelessWidget {
                   trailingLabel: state is GalleryFailure
                       ? null
                       : GalleryView.headerLabel,
-                  onTrailingTap: controller.refreshFeed,
                 ),
                 GallerySearchField(
                   controller: controller.searchController,

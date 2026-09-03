@@ -591,15 +591,17 @@ void main() {
     );
 
     testWidgets(
-      'the header shows REFRESH; tapping it refreshes page 1 without a skeleton',
+      'a pull shows the Refreshing pill over the feed without a skeleton',
       (tester) async {
-        await pumpLoadedFeed(tester);
-        expect(find.text('REFRESH'), findsOneWidget);
+        await pumpLoadedFeed(tester, hits: 20);
+        expect(find.text('REFRESH'), findsNothing);
 
         final pending = Completer<PixabayPage>();
         when(repository.getImages).thenAnswer((_) => pending.future);
 
-        await tester.tap(find.text('REFRESH'));
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, 300));
+        await tester.pump();
+        // onRefresh runs post-frame; the pill overlay rebuilds the frame after
         await tester.pump();
 
         expect(find.text(GalleryRefreshPill.refreshingLabel), findsOneWidget);
