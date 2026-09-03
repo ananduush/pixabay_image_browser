@@ -36,4 +36,7 @@ abstract final class AppColors {
   static const Color glassGloss = Color(0x99FFFFFF);
   static const Color glassShadow = Color(0x2616130F);
   static const Color glassShadowSoft = Color(0x1216130F);
+
+  // Tag chip hairline (rgba(255,255,255,.6)).
+  static const Color chipBorder = Color(0x99FFFFFF);
 }

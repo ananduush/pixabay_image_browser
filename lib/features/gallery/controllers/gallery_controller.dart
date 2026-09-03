@@ -250,11 +250,13 @@ class GalleryController extends GetxController {
     required int pageNumber,
     List<PixabayImage> existing = const <PixabayImage>[],
   }) {
+    // Ids must be unique across the feed, and within one response too: a
+    // repeated id would give two tiles one hero tag and break navigation.
     final seen = existing.toSet();
-    final images = <PixabayImage>[
-      ...existing,
-      ...response.hits.where((hit) => !seen.contains(hit)),
-    ];
+    final images = <PixabayImage>[...existing];
+    for (final hit in response.hits) {
+      if (seen.add(hit)) images.add(hit);
+    }
     final status =
         (response.hits.isEmpty || pageNumber * perPage >= response.totalHits)
         ? const FeedEnd()

@@ -988,6 +988,66 @@ void main() {
       });
     });
 
+    test('an id repeated inside one response is kept once', () {
+      fakeAsync((async) {
+        when(
+          () => repository.getImages(query: '', page: 1, perPage: 20),
+        ).thenAnswer(
+          (_) async => PixabayPage.fromJson(<String, dynamic>{
+            'total': 3,
+            'totalHits': 500,
+            'hits': <Map<String, dynamic>>[
+              sampleHit(id: 1),
+              sampleHit(id: 1),
+              sampleHit(id: 2),
+            ],
+          }),
+        );
+
+        final controller = GalleryController(repository: repository)..onInit();
+        async.flushMicrotasks();
+
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>().having(
+            (s) => s.images.map((image) => image.id).toList(),
+            'ids',
+            <int>[1, 2],
+          ),
+        );
+        controller.onClose();
+      });
+    });
+
+    test('page 2 drops both its internal repeats and page-1 ids', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async, hits: 20);
+        when(
+          () => repository.getImages(query: '', page: 2, perPage: 20),
+        ).thenAnswer(
+          (_) async => PixabayPage.fromJson(<String, dynamic>{
+            'total': 3,
+            'totalHits': 500,
+            'hits': <Map<String, dynamic>>[
+              sampleHit(id: 1000), // already on page 1
+              sampleHit(id: 5000),
+              sampleHit(id: 5000),
+            ],
+          }),
+        );
+
+        unawaited(controller.loadMore());
+        async.flushMicrotasks();
+
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>()
+              .having((s) => s.images, 'images', hasLength(21))
+              .having((s) => s.images.last.id, 'last id', 5000),
+        );
+      });
+    });
+
     test('an empty page 2 ends the feed without adding images', () {
       fakeAsync((async) {
         final controller = exploreLoaded(async);
