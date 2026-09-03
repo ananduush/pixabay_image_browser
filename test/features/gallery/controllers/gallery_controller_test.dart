@@ -31,6 +31,24 @@ void main() {
 
   Future<void> settle() => Future<void>.delayed(Duration.zero);
 
+  void stubPage(String query, int page, {int hits = 20, int totalHits = 500}) {
+    when(
+      () => repository.getImages(query: query, page: page, perPage: 20),
+    ).thenAnswer(
+      (_) async => PixabayPage.fromJson(
+        samplePage(hitCount: hits, firstId: page * 1000, totalHits: totalHits),
+      ),
+    );
+  }
+
+  Completer<PixabayPage> pendingPage(String query, int page) {
+    final pending = Completer<PixabayPage>();
+    when(
+      () => repository.getImages(query: query, page: page, perPage: 20),
+    ).thenAnswer((_) => pending.future);
+    return pending;
+  }
+
   test('starts in the loading state', () {
     when(repository.getImages).thenAnswer((_) async => pageWith(1));
 
@@ -704,6 +722,804 @@ void main() {
         async.elapse(debounce);
 
         verifyNever(() => repository.getImages(query: 'fog'));
+      });
+    });
+  });
+
+  group('pagination', () {
+    GalleryController exploreLoaded(
+      FakeAsync async, {
+      int hits = 20,
+      int totalHits = 500,
+    }) {
+      stubPage('', 1, hits: hits, totalHits: totalHits);
+      final controller = GalleryController(repository: repository)..onInit();
+      async.flushMicrotasks();
+      expect(controller.state.value, isA<GalleryLoaded>());
+      return controller;
+    }
+
+    test('page 1 loads with page == 1 and FeedIdle when 20 < totalHits', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async, hits: 20, totalHits: 500);
+
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>()
+              .having((s) => s.page, 'page', 1)
+              .having((s) => s.status, 'status', isA<FeedIdle>())
+              .having((s) => s.images, 'images', hasLength(20)),
+        );
+      });
+    });
+
+    test('page 1 with totalHits: 20 is FeedEnd', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async, hits: 20, totalHits: 20);
+
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>().having(
+            (s) => s.status,
+            'status',
+            isA<FeedEnd>(),
+          ),
+        );
+      });
+    });
+
+    test('an empty page 1 is FeedEnd', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async, hits: 0);
+
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>()
+              .having((s) => s.status, 'status', isA<FeedEnd>())
+              .having((s) => s.images, 'images', isEmpty),
+        );
+      });
+    });
+
+    test('loadMore requests page 2 with the same query and appends', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+        stubPage('', 2);
+
+        unawaited(controller.loadMore());
+        async.flushMicrotasks();
+
+        verify(
+          () => repository.getImages(query: '', page: 2, perPage: 20),
+        ).called(1);
+        final state = controller.state.value;
+        expect(state, isA<GalleryLoaded>());
+        expect(
+          state,
+          isA<GalleryLoaded>()
+              .having((s) => s.page, 'page', 2)
+              .having((s) => s.images, 'images', hasLength(40)),
+        );
+        final images = (state as GalleryLoaded).images;
+        expect(images.take(20).map((i) => i.id), [
+          for (var i = 0; i < 20; i++) 1000 + i,
+        ]);
+        expect(images.skip(20).map((i) => i.id), [
+          for (var i = 0; i < 20; i++) 2000 + i,
+        ]);
+      });
+    });
+
+    test(
+      'loadMore called twice while page 2 is pending issues one request',
+      () {
+        fakeAsync((async) {
+          final controller = exploreLoaded(async);
+          pendingPage('', 2);
+
+          unawaited(controller.loadMore());
+          unawaited(controller.loadMore());
+          async.flushMicrotasks();
+
+          verify(
+            () => repository.getImages(query: '', page: 2, perPage: 20),
+          ).called(1);
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>().having(
+              (s) => s.status,
+              'status',
+              isA<FeedLoadingMore>(),
+            ),
+          );
+        });
+      },
+    );
+
+    test(
+      'loadMore during FeedEnd, FeedRefreshing and FeedLoadMoreFailed issues no request',
+      () {
+        fakeAsync((async) {
+          final ended = exploreLoaded(async, hits: 20, totalHits: 20);
+          unawaited(ended.loadMore());
+          async.flushMicrotasks();
+          verifyNever(
+            () => repository.getImages(query: '', page: 2, perPage: 20),
+          );
+
+          final refreshing = exploreLoaded(async);
+          pendingPage('', 1);
+          unawaited(refreshing.refreshFeed());
+          async.flushMicrotasks();
+          unawaited(refreshing.loadMore());
+          async.flushMicrotasks();
+          verifyNever(
+            () => repository.getImages(query: '', page: 2, perPage: 20),
+          );
+
+          final failed = exploreLoaded(async);
+          var page2Calls = 0;
+          when(
+            () => repository.getImages(query: '', page: 2, perPage: 20),
+          ).thenAnswer((_) {
+            page2Calls++;
+            return Future<PixabayPage>.error(const PixabayNetworkException());
+          });
+          unawaited(failed.loadMore());
+          async.flushMicrotasks();
+          expect(page2Calls, 1);
+          unawaited(failed.loadMore());
+          async.flushMicrotasks();
+          expect(page2Calls, 1);
+        });
+      },
+    );
+
+    test('page-2 failure keeps images, FeedLoadMoreFailed, page still 1', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+        const error = PixabayNetworkException();
+        when(
+          () => repository.getImages(query: '', page: 2, perPage: 20),
+        ).thenAnswer((_) => Future<PixabayPage>.error(error));
+
+        unawaited(controller.loadMore());
+        async.flushMicrotasks();
+
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>()
+              .having((s) => s.images, 'images', hasLength(20))
+              .having((s) => s.page, 'page', 1)
+              .having(
+                (s) => s.status,
+                'status',
+                isA<FeedLoadMoreFailed>().having(
+                  (f) => f.error,
+                  'error',
+                  error,
+                ),
+              ),
+        );
+      });
+    });
+
+    test(
+      'retryLoadMore requests page 2 again, transitions through FeedLoadingMore, appends once',
+      () {
+        fakeAsync((async) {
+          final controller = exploreLoaded(async);
+          var calls = 0;
+          final retry = Completer<PixabayPage>();
+          when(
+            () => repository.getImages(query: '', page: 2, perPage: 20),
+          ).thenAnswer((_) {
+            calls++;
+            if (calls == 1) {
+              return Future<PixabayPage>.error(const PixabayNetworkException());
+            }
+            return retry.future;
+          });
+          unawaited(controller.loadMore());
+          async.flushMicrotasks();
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>().having(
+              (s) => s.status,
+              'status',
+              isA<FeedLoadMoreFailed>(),
+            ),
+          );
+
+          final observed = <GalleryState>[];
+          controller.state.listen(observed.add);
+          unawaited(controller.retryLoadMore());
+          async.flushMicrotasks();
+          expect(
+            observed.first,
+            isA<GalleryLoaded>().having(
+              (s) => s.status,
+              'status',
+              isA<FeedLoadingMore>(),
+            ),
+          );
+
+          retry.complete(
+            PixabayPage.fromJson(
+              samplePage(hitCount: 20, firstId: 2000, totalHits: 500),
+            ),
+          );
+          async.flushMicrotasks();
+
+          verify(
+            () => repository.getImages(query: '', page: 2, perPage: 20),
+          ).called(2);
+          verifyNever(
+            () => repository.getImages(query: '', page: 3, perPage: 20),
+          );
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>()
+                .having((s) => s.page, 'page', 2)
+                .having((s) => s.images, 'images', hasLength(40)),
+          );
+        });
+      },
+    );
+
+    test('a page-2 hit sharing an id with page 1 is not appended twice', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+        when(
+          () => repository.getImages(query: '', page: 2, perPage: 20),
+        ).thenAnswer(
+          (_) async => PixabayPage.fromJson(
+            samplePage(hitCount: 20, firstId: 1000, totalHits: 500),
+          ),
+        );
+
+        unawaited(controller.loadMore());
+        async.flushMicrotasks();
+
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>().having((s) => s.images, 'images', hasLength(20)),
+        );
+      });
+    });
+
+    test('an empty page 2 ends the feed without adding images', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+        stubPage('', 2, hits: 0);
+
+        unawaited(controller.loadMore());
+        async.flushMicrotasks();
+
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>()
+              .having((s) => s.status, 'status', isA<FeedEnd>())
+              .having((s) => s.images, 'images', hasLength(20))
+              .having((s) => s.page, 'page', 2),
+        );
+      });
+    });
+
+    test('a 400 on page 2 ends the feed instead of failing', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+        when(
+          () => repository.getImages(query: '', page: 2, perPage: 20),
+        ).thenAnswer(
+          (_) => Future<PixabayPage>.error(
+            const PixabayApiException(statusCode: 400, path: '/api/'),
+          ),
+        );
+
+        unawaited(controller.loadMore());
+        async.flushMicrotasks();
+
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>()
+              .having((s) => s.status, 'status', isA<FeedEnd>())
+              .having((s) => s.images, 'images', hasLength(20))
+              .having((s) => s.page, 'page', 1),
+        );
+      });
+    });
+
+    test('page-2 response with a smaller totalHits updates totalHits', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+        stubPage('', 2, totalHits: 40);
+
+        unawaited(controller.loadMore());
+        async.flushMicrotasks();
+
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>().having((s) => s.totalHits, 'totalHits', 40),
+        );
+      });
+    });
+
+    test('search then loadMore requests page 2 of that query', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+        stubPage('mountains', 1);
+        unawaited(controller.search('mountains'));
+        async.flushMicrotasks();
+        stubPage('mountains', 2);
+
+        unawaited(controller.loadMore());
+        async.flushMicrotasks();
+
+        verify(
+          () => repository.getImages(query: 'mountains', page: 2, perPage: 20),
+        ).called(1);
+      });
+    });
+
+    test(
+      'changing the query while page 2 is pending ignores the late response',
+      () {
+        fakeAsync((async) {
+          final controller = exploreLoaded(async);
+          stubPage('mountains', 1);
+          unawaited(controller.search('mountains'));
+          async.flushMicrotasks();
+          final mountainsPage2 = pendingPage('mountains', 2);
+          unawaited(controller.loadMore());
+          async.flushMicrotasks();
+
+          stubPage('forest', 1);
+          unawaited(controller.search('forest'));
+          async.flushMicrotasks();
+          mountainsPage2.complete(
+            PixabayPage.fromJson(
+              samplePage(hitCount: 20, firstId: 2000, totalHits: 500),
+            ),
+          );
+          async.flushMicrotasks();
+
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>()
+                .having((s) => s.query, 'query', 'forest')
+                .having((s) => s.images, 'images', hasLength(20))
+                .having((s) => s.page, 'page', 1),
+          );
+        });
+      },
+    );
+
+    test(
+      'clearing search after paginating restores Explore page 1 with no request',
+      () {
+        fakeAsync((async) {
+          final controller = exploreLoaded(async);
+          stubPage('fog', 1);
+          unawaited(controller.search('fog'));
+          async.flushMicrotasks();
+          final fogPage2 = pendingPage('fog', 2);
+          unawaited(controller.loadMore());
+          async.flushMicrotasks();
+
+          controller.clearSearch();
+
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>()
+                .having((s) => s.isSearch, 'isSearch', isFalse)
+                .having((s) => s.images, 'images', hasLength(20))
+                .having((s) => s.page, 'page', 1)
+                .having((s) => s.status, 'status', isA<FeedIdle>()),
+          );
+          verify(
+            () => repository.getImages(query: '', page: 1, perPage: 20),
+          ).called(1);
+
+          fogPage2.complete(
+            PixabayPage.fromJson(
+              samplePage(hitCount: 20, firstId: 2000, totalHits: 500),
+            ),
+          );
+          async.flushMicrotasks();
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>()
+                .having((s) => s.isSearch, 'isSearch', isFalse)
+                .having((s) => s.images, 'images', hasLength(20))
+                .having((s) => s.page, 'page', 1),
+          );
+        });
+      },
+    );
+
+    test(
+      'clearing a short idle search never starts a search page under Explore',
+      () {
+        fakeAsync((async) {
+          final controller = exploreLoaded(async);
+          stubPage('fog', 1, hits: 4);
+          unawaited(controller.search('fog'));
+          async.flushMicrotasks();
+
+          controller.clearSearch();
+          stubPage('', 2);
+          unawaited(controller.loadMore());
+          async.flushMicrotasks();
+
+          verify(
+            () => repository.getImages(query: '', page: 2, perPage: 20),
+          ).called(1);
+          verifyNever(
+            () => repository.getImages(query: 'fog', page: 2, perPage: 20),
+          );
+        });
+      },
+    );
+
+    test(
+      'unexpected error on load-more sets FeedLoadMoreFailed and rethrows',
+      () {
+        fakeAsync((async) {
+          final controller = exploreLoaded(async);
+          when(
+            () => repository.getImages(query: '', page: 2, perPage: 20),
+          ).thenAnswer((_) => Future<PixabayPage>.error(StateError('bug')));
+
+          Object? thrown;
+          controller.loadMore().catchError((Object error) => thrown = error);
+          async.flushMicrotasks();
+
+          expect(thrown, isStateError);
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>().having(
+              (s) => s.status,
+              'status',
+              isA<FeedLoadMoreFailed>().having(
+                (f) => f.error,
+                'error',
+                isA<PixabayUnexpectedException>(),
+              ),
+            ),
+          );
+        });
+      },
+    );
+  });
+
+  group('refresh', () {
+    GalleryController exploreLoaded(FakeAsync async, {int hits = 20}) {
+      stubPage('', 1, hits: hits);
+      final controller = GalleryController(repository: repository)..onInit();
+      async.flushMicrotasks();
+      expect(controller.state.value, isA<GalleryLoaded>());
+      return controller;
+    }
+
+    test(
+      'refresh on a loaded feed sets FeedRefreshing then replaces with page 1',
+      () {
+        fakeAsync((async) {
+          final controller = exploreLoaded(async);
+          final pending = pendingPage('', 1);
+          unawaited(controller.refreshFeed());
+          async.flushMicrotasks();
+
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>()
+                .having((s) => s.status, 'status', isA<FeedRefreshing>())
+                .having((s) => s.images, 'images', hasLength(20))
+                .having((s) => s.images.first.id, 'firstId', 1000),
+          );
+
+          pending.complete(
+            PixabayPage.fromJson(
+              samplePage(hitCount: 20, firstId: 5000, totalHits: 500),
+            ),
+          );
+          async.flushMicrotasks();
+
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>()
+                .having((s) => s.page, 'page', 1)
+                .having((s) => s.status, 'status', isA<FeedIdle>())
+                .having((s) => s.images.first.id, 'firstId', 5000)
+                .having((s) => s.images, 'images', hasLength(20)),
+          );
+        });
+      },
+    );
+
+    test(
+      'refresh in active Search re-requests that query and keeps the text field',
+      () {
+        fakeAsync((async) {
+          final controller = exploreLoaded(async);
+          stubPage('fog', 1);
+          unawaited(controller.search('fog'));
+          async.flushMicrotasks();
+          expect(controller.searchController.text, 'fog');
+
+          unawaited(controller.refreshFeed());
+          async.flushMicrotasks();
+
+          verify(
+            () => repository.getImages(query: 'fog', page: 1, perPage: 20),
+          ).called(2);
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>().having((s) => s.query, 'query', 'fog'),
+          );
+          expect(controller.searchController.text, 'fog');
+        });
+      },
+    );
+
+    test(
+      'a next-page response completing after a refresh started is ignored',
+      () {
+        fakeAsync((async) {
+          final controller = exploreLoaded(async);
+          final page2 = pendingPage('', 2);
+          unawaited(controller.loadMore());
+          async.flushMicrotasks();
+
+          final page1 = pendingPage('', 1);
+          unawaited(controller.refreshFeed());
+          async.flushMicrotasks();
+
+          page2.complete(
+            PixabayPage.fromJson(
+              samplePage(hitCount: 20, firstId: 2000, totalHits: 500),
+            ),
+          );
+          async.flushMicrotasks();
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>()
+                .having((s) => s.images, 'images', hasLength(20))
+                .having((s) => s.images.first.id, 'firstId', 1000)
+                .having((s) => s.status, 'status', isA<FeedRefreshing>()),
+          );
+
+          page1.complete(
+            PixabayPage.fromJson(
+              samplePage(hitCount: 20, firstId: 5000, totalHits: 500),
+            ),
+          );
+          async.flushMicrotasks();
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>()
+                .having((s) => s.images, 'images', hasLength(20))
+                .having((s) => s.images.first.id, 'firstId', 5000)
+                .having((s) => s.page, 'page', 1),
+          );
+        });
+      },
+    );
+
+    test('after a refresh, loadMore requests page 2 again', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+        stubPage('', 2);
+        unawaited(controller.loadMore());
+        async.flushMicrotasks();
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>().having((s) => s.page, 'page', 2),
+        );
+
+        unawaited(controller.refreshFeed());
+        async.flushMicrotasks();
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>().having((s) => s.page, 'page', 1),
+        );
+
+        unawaited(controller.loadMore());
+        async.flushMicrotasks();
+        verify(
+          () => repository.getImages(query: '', page: 2, perPage: 20),
+        ).called(2);
+      });
+    });
+
+    test('refresh while already refreshing issues one request', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+        pendingPage('', 1);
+        unawaited(controller.refreshFeed());
+        unawaited(controller.refreshFeed());
+        async.flushMicrotasks();
+
+        verify(
+          () => repository.getImages(query: '', page: 1, perPage: 20),
+        ).called(2);
+      });
+    });
+
+    test(
+      'refresh from GalleryFailure behaves like retry; from GalleryLoading does nothing',
+      () {
+        fakeAsync((async) {
+          final pending = Completer<PixabayPage>();
+          var page1Calls = 0;
+          when(
+            () => repository.getImages(query: '', page: 1, perPage: 20),
+          ).thenAnswer((_) {
+            page1Calls++;
+            if (page1Calls == 1) {
+              return Future<PixabayPage>.error(const PixabayNetworkException());
+            }
+            if (page1Calls == 2) {
+              return Future<PixabayPage>.value(
+                PixabayPage.fromJson(
+                  samplePage(hitCount: 20, firstId: 1000, totalHits: 500),
+                ),
+              );
+            }
+            return pending.future;
+          });
+          final failed = GalleryController(repository: repository)..onInit();
+          async.flushMicrotasks();
+          expect(failed.state.value, isA<GalleryFailure>());
+
+          unawaited(failed.refreshFeed());
+          async.flushMicrotasks();
+          expect(failed.state.value, isA<GalleryLoaded>());
+          expect(page1Calls, 2);
+
+          final loading = GalleryController(repository: repository)..onInit();
+          async.flushMicrotasks();
+          expect(loading.state.value, isA<GalleryLoading>());
+          unawaited(loading.refreshFeed());
+          async.flushMicrotasks();
+          expect(page1Calls, 3);
+        });
+      },
+    );
+
+    test('refresh failure becomes GalleryFailure with the query preserved', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+        stubPage('fog', 1);
+        unawaited(controller.search('fog'));
+        async.flushMicrotasks();
+        when(
+          () => repository.getImages(query: 'fog', page: 1, perPage: 20),
+        ).thenAnswer(
+          (_) => Future<PixabayPage>.error(const PixabayNetworkException()),
+        );
+
+        unawaited(controller.refreshFeed());
+        async.flushMicrotasks();
+
+        expect(
+          controller.state.value,
+          isA<GalleryFailure>()
+              .having((s) => s.query, 'query', 'fog')
+              .having((s) => s.error, 'error', isA<PixabayNetworkException>()),
+        );
+      });
+    });
+
+    test(
+      'an Explore refresh updates the cached snapshot shown after clear',
+      () {
+        fakeAsync((async) {
+          final controller = exploreLoaded(async);
+          when(
+            () => repository.getImages(query: '', page: 1, perPage: 20),
+          ).thenAnswer(
+            (_) async => PixabayPage.fromJson(
+              samplePage(hitCount: 20, firstId: 5000, totalHits: 500),
+            ),
+          );
+          unawaited(controller.refreshFeed());
+          async.flushMicrotasks();
+
+          stubPage('fog', 1);
+          unawaited(controller.search('fog'));
+          async.flushMicrotasks();
+          controller.clearSearch();
+
+          expect(
+            controller.state.value,
+            isA<GalleryLoaded>()
+                .having((s) => s.isSearch, 'isSearch', isFalse)
+                .having((s) => s.images.first.id, 'firstId', 5000)
+                .having((s) => s.images, 'images', hasLength(20)),
+          );
+          verify(
+            () => repository.getImages(query: '', page: 1, perPage: 20),
+          ).called(2);
+        });
+      },
+    );
+
+    test('onClose removes the scroll listener without throwing', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+        expect(controller.onClose, returnsNormally);
+      });
+    });
+
+    test(
+      'scrollToTop with no attached scroll view does nothing and does not throw',
+      () {
+        fakeAsync((async) {
+          final controller = exploreLoaded(async);
+          final before = controller.state.value;
+          expect(controller.scrollToTop, returnsNormally);
+          expect(identical(controller.state.value, before), isTrue);
+          expect(controller.searchController.text, isEmpty);
+          verify(
+            () => repository.getImages(query: '', page: 1, perPage: 20),
+          ).called(1);
+        });
+      },
+    );
+  });
+
+  group('pull gating', () {
+    GalleryController exploreLoaded(FakeAsync async) {
+      when(repository.getImages).thenAnswer((_) async => pageWith(3));
+      final controller = GalleryController(repository: repository)..onInit();
+      async.flushMicrotasks();
+      expect(controller.state.value, isA<GalleryLoaded>());
+      return controller;
+    }
+
+    test('refreshFromPull without a finger down does nothing', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+
+        unawaited(controller.refreshFromPull());
+        async.flushMicrotasks();
+
+        verify(repository.getImages).called(1);
+        expect(
+          controller.state.value,
+          isA<GalleryLoaded>().having(
+            (s) => s.status,
+            'status',
+            isA<FeedIdle>(),
+          ),
+        );
+      });
+    });
+
+    test('refreshFromPull while dragging refreshes page 1', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+
+        controller.onUserDrag(dragging: true);
+        unawaited(controller.refreshFromPull());
+        async.flushMicrotasks();
+
+        verify(repository.getImages).called(2);
+      });
+    });
+
+    test('a drag that ended no longer allows a pull refresh', () {
+      fakeAsync((async) {
+        final controller = exploreLoaded(async);
+
+        controller.onUserDrag(dragging: true);
+        controller.onUserDrag(dragging: false);
+        unawaited(controller.refreshFromPull());
+        async.flushMicrotasks();
+
+        verify(repository.getImages).called(1);
       });
     });
   });

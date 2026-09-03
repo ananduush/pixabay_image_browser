@@ -106,4 +106,13 @@ abstract final class AppTypography {
 
   /// text link — Instrument Sans 13.5.
   static TextStyle get link => sans(13.5, color: AppColors.text62);
+
+  /// feed footer caption ("PAGE 3", "END OF RESULTS") — Instrument Sans 11, +.06em, uppercase.
+  static TextStyle get feedStatus => label(11);
+
+  /// refresh pill — Instrument Sans 12 medium.
+  static TextStyle get refreshStatus => sans(12, weight: FontWeight.w500);
+
+  /// pull hint — Instrument Sans 12, 62% ink.
+  static TextStyle get refreshHint => sans(12, color: AppColors.text62);
 }
