@@ -5,12 +5,19 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../models/pixabay_image.dart';
+import 'image_hero.dart';
 
 /// One photograph, cover-fitted with a 2pt radius. While loading it shows
 /// the skeleton fill; if the bytes never arrive it shows the design's
-/// "Image unavailable" fallback instead of an error icon.
+/// "Image unavailable" fallback instead of an error icon. Tapping it opens
+/// Image Details; the picture is the shared element of that transition.
 class GalleryImageTile extends StatelessWidget {
-  const GalleryImageTile({super.key, required this.image, this.hero = false});
+  const GalleryImageTile({
+    super.key,
+    required this.image,
+    this.hero = false,
+    this.onTap,
+  });
 
   final PixabayImage image;
 
@@ -18,20 +25,37 @@ class GalleryImageTile extends StatelessWidget {
   /// square tiles load the 340px variant and a bare glyph.
   final bool hero;
 
+  final VoidCallback? onTap;
+
+  static String openLabel(PixabayImage image) => 'Open ${image.title}';
+
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: const BorderRadius.all(Radius.circular(AppRadius.image)),
-      child: ColoredBox(
-        color: AppColors.inkFill7,
-        child: CachedNetworkImage(
-          imageUrl: hero ? image.webformatUrl : image.tileUrl,
-          fit: BoxFit.cover,
-          fadeInDuration: const Duration(milliseconds: 250),
-          placeholder: (BuildContext context, String url) =>
-              const SizedBox.expand(),
-          errorWidget: (BuildContext context, String url, Object error) =>
-              GalleryImageFallback(hero: hero),
+    return Semantics(
+      button: onTap != null,
+      label: openLabel(image),
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: ImageHero(
+          image: image,
+          child: ClipRRect(
+            borderRadius: const BorderRadius.all(
+              Radius.circular(AppRadius.image),
+            ),
+            child: ColoredBox(
+              color: AppColors.inkFill7,
+              child: CachedNetworkImage(
+                imageUrl: hero ? image.webformatUrl : image.tileUrl,
+                fit: BoxFit.cover,
+                fadeInDuration: const Duration(milliseconds: 250),
+                placeholder: (BuildContext context, String url) =>
+                    const SizedBox.expand(),
+                errorWidget: (BuildContext context, String url, Object e) =>
+                    GalleryImageFallback(hero: hero),
+              ),
+            ),
+          ),
         ),
       ),
     );
