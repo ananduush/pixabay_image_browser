@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
 
-/// glyph, title, body, then whatever the state offers
-class GalleryStateView extends StatelessWidget {
-  const GalleryStateView({
+/// Shared empty/error/locked layout: glyph, title, body, then whatever the
+/// state offers. Used by Gallery, Auth and Favourites.
+class StateView extends StatelessWidget {
+  const StateView({
     super.key,
     required this.glyph,
     required this.title,

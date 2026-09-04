@@ -15,6 +15,13 @@ class GlassTabBar extends StatelessWidget {
 
   static const double designBottomInset = 40;
 
+  /// Pill height: the 54pt tabs plus 6pt padding on each side.
+  static const double height = _Tab.size + 12;
+
+  /// Distance from the physical bottom edge, home indicator included.
+  static double bottomInset(BuildContext context) =>
+      math.max(designBottomInset, MediaQuery.paddingOf(context).bottom + 6);
+
   static const String exploreLabel = 'Explore';
   static const String exploreActiveLabel = 'Explore, scroll to top';
   static const String favouritesLabel = 'Favourites';
@@ -34,11 +41,10 @@ class GlassTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final safeBottom = MediaQuery.paddingOf(context).bottom;
     return Positioned(
       left: 0,
       right: 0,
-      bottom: math.max(designBottomInset, safeBottom + 6),
+      bottom: bottomInset(context),
       child: Center(
         child: GlassSurface(
           borderRadius: 33,

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/pill_button.dart';
+import '../../../core/widgets/state_view.dart';
 import '../services/pixabay_exception.dart';
-import 'gallery_state_view.dart';
 
 /// Full-screen failure states from the design: offline, API error and the
 /// developer-facing missing-key screen.
@@ -71,7 +71,7 @@ class GalleryErrorView extends StatelessWidget {
       ),
     };
 
-    return GalleryStateView(
+    return StateView(
       glyph: glyph,
       title: title,
       body: body,

@@ -5,7 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/filled_pill_button.dart';
-import '../../gallery/widgets/gallery_state_view.dart';
+import '../../../core/widgets/state_view.dart';
 import '../controllers/auth_form_controller.dart';
 import '../controllers/auth_form_state.dart';
 import '../controllers/auth_state.dart';
@@ -58,7 +58,7 @@ class AuthView extends GetView<AuthFormController> {
           if (controller.authState case AuthUnavailable(:final error)) {
             return Stack(
               children: <Widget>[
-                GalleryStateView(
+                StateView(
                   glyph: const Icon(
                     Icons.person_off_outlined,
                     size: 34,

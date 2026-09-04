@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Required to reach the Pixabay API in release builds. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- gal: saving to the gallery needs this on API 29 and below -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
     <application
         android:label="pixabay_image_browser"
         android:name="${applicationName}"

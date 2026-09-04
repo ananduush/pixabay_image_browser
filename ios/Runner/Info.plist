@@ -47,6 +47,10 @@
 			</array>
 		</dict>
 	</dict>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Aperture saves downloaded images to your Photos library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Aperture saves downloaded images to your Photos library.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

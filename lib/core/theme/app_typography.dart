@@ -182,4 +182,22 @@ abstract final class AppTypography {
   static TextStyle get sheetDismiss => sans(14, color: AppColors.text62);
 
   static TextStyle get avatarInitialLarge => serif(20);
+
+  // Named roles used by Favourites.
+
+  /// Inline error title — Instrument Sans 14 medium, critical.
+  static TextStyle get errorTitle =>
+      sans(14, color: AppColors.critical, weight: FontWeight.w500);
+
+  /// Inline error body — Instrument Sans 13, 62% ink, line-height 1.6.
+  static TextStyle get errorBody =>
+      sans(13, color: AppColors.text62, height: 1.6);
+
+  /// Toast message — Instrument Sans 13 medium on ink.
+  static TextStyle get toast =>
+      sans(13, color: AppColors.paper, weight: FontWeight.w500);
+
+  /// Centred footnote — Instrument Sans 12, 56% ink, line-height 1.6.
+  static TextStyle get footnote =>
+      sans(12, color: AppColors.text56, height: 1.6);
 }

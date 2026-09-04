@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import 'gallery_state_view.dart';
+import '../../../core/widgets/state_view.dart';
 
 /// zero-hit search state
 class GallerySearchEmptyView extends StatelessWidget {
@@ -33,7 +33,7 @@ class GallerySearchEmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GalleryStateView(
+    return StateView(
       glyph: const Icon(Icons.search_off, size: 36, color: AppColors.rule35),
       title: title(query),
       body: body,

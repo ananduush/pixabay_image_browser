@@ -7,6 +7,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/filled_pill_button.dart';
 import '../../../core/widgets/pill_button.dart';
+import '../../favorites/controllers/favorites_controller.dart';
+import '../../home/controllers/home_controller.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/auth_state.dart';
 import '../models/auth_user.dart';
@@ -36,7 +38,20 @@ class ProfileView extends GetView<AuthController> {
 
   static const String version = '1.0.0';
 
+  static const String savedImagesLabel = 'Saved images';
+
+  /// Shown until the favourites list has loaded.
+  static const String savedImagesUnknown = '—';
+
+  static const String logoutFootnote =
+      'Logging out keeps your saved images on the device.';
+
   static const double bottomSpacer = 130;
+
+  FavoritesController get _favorites => Get.find<FavoritesController>();
+
+  static String savedImagesValue(int? count) =>
+      count?.toString() ?? savedImagesUnknown;
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +80,10 @@ class ProfileView extends GetView<AuthController> {
                     _SignedIn(
                       user: user,
                       signingOut: signingOut,
+                      // read inside this Obx so the row tracks the count
+                      savedImages: savedImagesValue(_favorites.count),
+                      onSavedImagesTap:
+                          Get.find<HomeController>().showFavourites,
                       onLogOut: controller.signOut,
                     ),
                   AuthUnavailable(:final error) => _Unavailable(error: error),
@@ -111,11 +130,15 @@ class _SignedIn extends StatelessWidget {
   const _SignedIn({
     required this.user,
     required this.signingOut,
+    required this.savedImages,
+    required this.onSavedImagesTap,
     required this.onLogOut,
   });
 
   final AuthUser user;
   final bool signingOut;
+  final String savedImages;
+  final VoidCallback onSavedImagesTap;
   final VoidCallback onLogOut;
 
   @override
@@ -127,7 +150,16 @@ class _SignedIn extends StatelessWidget {
         children: <Widget>[
           ProfileIdentity(user: user),
           const SizedBox(height: 30),
-          const _AboutRows(),
+          ProfileRows(
+            children: <ProfileRow>[
+              ProfileRow(
+                label: ProfileView.savedImagesLabel,
+                value: savedImages,
+                onTap: onSavedImagesTap,
+              ),
+              ..._AboutRows.rows,
+            ],
+          ),
           const SizedBox(height: 30),
           PillButton(
             label: signingOut
@@ -135,6 +167,12 @@ class _SignedIn extends StatelessWidget {
                 : ProfileView.logOutLabel,
             height: 52,
             onPressed: signingOut ? null : onLogOut,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            ProfileView.logoutFootnote,
+            textAlign: TextAlign.center,
+            style: AppTypography.footnote,
           ),
         ],
       ),
@@ -171,16 +209,13 @@ class _Unavailable extends StatelessWidget {
 class _AboutRows extends StatelessWidget {
   const _AboutRows();
 
+  static const List<ProfileRow> rows = <ProfileRow>[
+    ProfileRow(label: ProfileView.sourceLabel, value: ProfileView.sourceValue),
+    ProfileRow(label: ProfileView.versionLabel, value: ProfileView.version),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return const ProfileRows(
-      children: <ProfileRow>[
-        ProfileRow(
-          label: ProfileView.sourceLabel,
-          value: ProfileView.sourceValue,
-        ),
-        ProfileRow(label: ProfileView.versionLabel, value: ProfileView.version),
-      ],
-    );
+    return const ProfileRows(children: rows);
   }
 }
