@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pixabay_image_browser/features/favorites/repositories/favorites_repository.dart';
 import 'package:pixabay_image_browser/features/favorites/services/favorites_storage_exception.dart';
+import 'package:pixabay_image_browser/features/favorites/services/favorites_storage_service.dart';
 import 'package:pixabay_image_browser/features/gallery/models/pixabay_image.dart';
 
 import '../../../support/favorites_fixtures.dart';
@@ -95,5 +96,24 @@ void main() {
       throwsA(isA<FavoritesStorageException>()),
     );
     expect(storage.saved(userA), isEmpty);
+  });
+
+  test('a corrupt store is never overwritten by a save', () async {
+    final key = FavoritesStorageService.keyFor(userA);
+    storage.store[key] = '{"id": 1}';
+    final corrupt = throwsA(
+      isA<FavoritesStorageException>().having(
+        (e) => e.operation,
+        'operation',
+        FavoritesStorageOperation.decode,
+      ),
+    );
+
+    await expectLater(() => repository.load(userA), corrupt);
+    await expectLater(() => repository.add(userA, imageWith(1)), corrupt);
+    await expectLater(() => repository.remove(userA, 1), corrupt);
+
+    expect(storage.writes, 0);
+    expect(storage.store[key], '{"id": 1}');
   });
 }

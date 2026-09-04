@@ -111,9 +111,9 @@ class FavoritesController extends GetxController {
         final images = await _repository.load(userId);
         if (generation != _generation || _pending > 0) return;
         state.value = FavoritesLoaded(userId, images);
-      } on FavoritesStorageException catch (error) {
+      } catch (error) {
         if (generation == _generation) {
-          state.value = FavoritesLoadFailed(userId, error);
+          state.value = FavoritesLoadFailed(userId, _asStorageException(error));
         }
       }
     });
@@ -154,9 +154,9 @@ class FavoritesController extends GetxController {
       final images = await _repository.load(userId);
       if (generation != _generation || _pending > 0) return;
       state.value = FavoritesLoaded(userId, images);
-    } on FavoritesStorageException catch (error) {
+    } catch (error) {
       if (generation == _generation) {
-        state.value = FavoritesLoadFailed(userId, error);
+        state.value = FavoritesLoadFailed(userId, _asStorageException(error));
       }
     }
   }
@@ -169,3 +169,13 @@ class FavoritesController extends GetxController {
     return run;
   }
 }
+
+/// Anything that is not already a storage failure is reported as one: an
+/// unexpected error must reach the error view, never the zone handler.
+FavoritesStorageException _asStorageException(Object error) =>
+    error is FavoritesStorageException
+    ? error
+    : FavoritesStorageException(
+        operation: FavoritesStorageOperation.read,
+        cause: error,
+      );

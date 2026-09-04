@@ -70,9 +70,6 @@ final class FavoritesLoaded extends FavoritesState {
   @override
   bool contains(int id) => images.any((image) => image.id == id);
 
-  FavoritesLoaded copyWith({List<PixabayImage>? images}) =>
-      FavoritesLoaded(userId, images ?? this.images);
-
   @override
   bool operator ==(Object other) =>
       other is FavoritesLoaded &&

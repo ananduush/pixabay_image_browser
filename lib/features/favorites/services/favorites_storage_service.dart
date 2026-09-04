@@ -10,11 +10,8 @@ import 'favorites_storage_exception.dart';
 /// key, so accounts on the same device never see each other's saves and
 /// logging out leaves the data in place.
 ///
-/// `shared_preferences` was chosen over the previously declared (and never
-/// used) `get_storage`: its async API reports write failures to the caller,
-/// whereas GetStorage's `write` resolves before the disk flush and swallows
-/// flush errors, which would make the storage-error handling below
-/// impossible. It is maintained by the Flutter team and is trivial to fake.
+/// `shared_preferences` (async API) reports write failures to the caller,
+/// which the storage-error handling below depends on.
 class FavoritesStorageService {
   FavoritesStorageService({required this._preferences});
 
@@ -32,6 +29,7 @@ class FavoritesStorageService {
         cause: error,
       );
     }
+    // Outside the try: a decode failure keeps its own operation.
     return raw == null ? const <PixabayImage>[] : decode(raw);
   }
 
@@ -49,25 +47,36 @@ class FavoritesStorageService {
     }
   }
 
-  /// Malformed entries are dropped and an undecodable value reads as empty:
-  /// a corrupt store must never lock the user out of saving again.
+  /// A missing key reads as empty (see [read]). Anything present that is
+  /// not a JSON list of objects is corruption and throws, so a later save can
+  /// never overwrite what was there. Rows with an unusable id (`<= 0`) or a
+  /// repeated id are still dropped: they are well-formed but never showable.
   @visibleForTesting
   static List<PixabayImage> decode(String raw) {
     final Object? decoded;
     try {
       decoded = jsonDecode(raw);
     } on FormatException catch (error) {
-      debugPrint('FavoritesStorageService: unreadable store, $error');
-      return const <PixabayImage>[];
+      throw FavoritesStorageException(
+        operation: FavoritesStorageOperation.decode,
+        cause: error,
+      );
     }
     if (decoded is! List<dynamic>) {
-      debugPrint('FavoritesStorageService: store is not a list');
-      return const <PixabayImage>[];
+      throw const FavoritesStorageException(
+        operation: FavoritesStorageOperation.decode,
+        cause: FormatException('store is not a list'),
+      );
     }
     final seen = <int>{};
     final images = <PixabayImage>[];
     for (final entry in decoded) {
-      if (entry is! Map<String, dynamic>) continue;
+      if (entry is! Map<String, dynamic>) {
+        throw FavoritesStorageException(
+          operation: FavoritesStorageOperation.decode,
+          cause: FormatException('entry is not an object', entry),
+        );
+      }
       final image = PixabayImage.fromJson(entry);
       if (image.id <= 0 || !seen.add(image.id)) continue;
       images.add(image);

@@ -9,6 +9,7 @@ import 'package:pixabay_image_browser/features/auth/controllers/auth_controller.
 import 'package:pixabay_image_browser/features/auth/models/auth_user.dart';
 import 'package:pixabay_image_browser/features/favorites/controllers/favorites_controller.dart';
 import 'package:pixabay_image_browser/features/favorites/repositories/favorites_repository.dart';
+import 'package:pixabay_image_browser/features/favorites/services/favorites_storage_service.dart';
 import 'package:pixabay_image_browser/features/favorites/views/favorites_view.dart';
 import 'package:pixabay_image_browser/features/favorites/widgets/favorites_locked_view.dart';
 import 'package:pixabay_image_browser/features/favorites/widgets/favorites_storage_error_view.dart';
@@ -51,8 +52,16 @@ void main() {
     WidgetTester tester, {
     AuthUser? user,
     List<PixabayImage> seeded = const <PixabayImage>[],
+    String? raw,
   }) async {
-    if (user != null) storage.seed(user.id, seeded);
+    // The load runs inside onInit, so the store must be in place first.
+    if (user != null) {
+      if (raw != null) {
+        storage.store[FavoritesStorageService.keyFor(user.id)] = raw;
+      } else {
+        storage.seed(user.id, seeded);
+      }
+    }
     final auth = Get.put(
       AuthController(
         repository: stubAuthRepository(MockAuthRepository(), user: user),
@@ -189,6 +198,61 @@ void main() {
 
     expect(find.byType(FavoritesStorageErrorView), findsNothing);
     expect(find.byType(FavoritesTile), findsOneWidget);
+  });
+
+  testWidgets(
+    'a damaged store shows the corruption copy and Retry leaves it untouched',
+    (tester) async {
+      final user = sampleUser();
+      await pumpFavorites(tester, user: user, raw: '{"id": 1}');
+
+      expect(find.text(FavoritesStorageErrorView.corruptTitle), findsOneWidget);
+      expect(find.text(FavoritesStorageErrorView.corruptBody), findsOneWidget);
+      expect(find.text(FavoritesStorageErrorView.title), findsNothing);
+      expect(find.byType(FavoritesTile), findsNothing);
+
+      await tester.tap(
+        find.widgetWithText(PillButton, FavoritesStorageErrorView.retryLabel),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text(FavoritesStorageErrorView.corruptTitle), findsOneWidget);
+      expect(storage.writes, 0);
+      expect(
+        storage.store[FavoritesStorageService.keyFor(user.id)],
+        '{"id": 1}',
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('an image that cannot load keeps its entry and still removes', (
+    tester,
+  ) async {
+    installFailingImageCache();
+    addTearDown(installPendingImageCache);
+    final user = sampleUser();
+    // A URL no earlier test has put in the image cache.
+    final image = PixabayImage.fromJson(<String, dynamic>{
+      ...sampleHit(id: 1),
+      'largeImageURL': 'https://example.test/broken_1280.jpg',
+    });
+    await pumpFavorites(tester, user: user, seeded: <PixabayImage>[image]);
+    await tester.pump();
+
+    expect(find.byType(FavoritesTile), findsOneWidget);
+    expect(find.byType(GalleryImageFallback), findsOneWidget);
+    expect(storage.saved(user.id).map((i) => i.id), <int>[1]);
+
+    await tester.tap(find.bySemanticsLabel(FavoritesTile.removeLabel(image)));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(FavoritesTile), findsNothing);
+    expect(find.text(FavoritesView.emptyTitle), findsOneWidget);
+    expect(storage.saved(user.id), isEmpty);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('a failed removal keeps the tile and shows the toast', (

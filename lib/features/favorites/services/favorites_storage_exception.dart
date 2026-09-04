@@ -1,7 +1,8 @@
-enum FavoritesStorageOperation { read, write }
+enum FavoritesStorageOperation { read, write, decode }
 
-/// Local storage refused a favourites read or write. [cause] is kept for
-/// logs; the UI shows its own copy, never the raw error.
+/// Local storage refused a favourites read or write, or the stored value
+/// could not be decoded ([FavoritesStorageOperation.decode]). [cause] is
+/// kept for logs; the UI shows its own copy, never the raw error.
 final class FavoritesStorageException implements Exception {
   const FavoritesStorageException({
     required this.operation,
