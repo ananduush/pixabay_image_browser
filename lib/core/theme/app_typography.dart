@@ -115,4 +115,31 @@ abstract final class AppTypography {
 
   /// pull hint — Instrument Sans 12, 62% ink.
   static TextStyle get refreshHint => sans(12, color: AppColors.text62);
+
+  // Named roles used by Image Details.
+
+  /// Detail title — Newsreader 29, line-height 1.15, -.015em.
+  static TextStyle get detailTitle =>
+      serif(29, height: 1.15, letterSpacing: -0.435);
+
+  /// Detail creator line / failed-hero title — Instrument Sans 13, 62% ink.
+  static TextStyle get detailMeta => sans(13, color: AppColors.text62);
+
+  /// Failed-hero hint — Instrument Sans 12, 56% ink.
+  static TextStyle get detailHint => sans(12, color: AppColors.text56);
+
+  /// Metric value — Newsreader 19.
+  static TextStyle get metric => serif(19);
+
+  /// Metric label — Instrument Sans 10, +.07em, uppercase.
+  static TextStyle get metricLabel => label(10, tracking: 0.07);
+
+  /// Tag chip — Instrument Sans 12.5.
+  static TextStyle get tag => sans(12.5);
+
+  /// Floating action label — Instrument Sans 15 medium.
+  static TextStyle get actionLabel => sans(15, weight: FontWeight.w500);
+
+  /// Avatar fallback initial — Newsreader 12.
+  static TextStyle get avatarInitial => serif(12);
 }

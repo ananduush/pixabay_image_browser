@@ -1,18 +1,7 @@
-import 'package:get/get.dart';
-
-import '../../features/gallery/bindings/gallery_binding.dart';
-import '../../features/gallery/views/gallery_view.dart';
-
+/// Route names. The page table lives in `app_pages.dart` so views can import
+/// these constants without a routes ↔ views import cycle.
 abstract final class AppRoutes {
   static const String gallery = '/gallery';
-}
-
-abstract final class AppPages {
-  static final List<GetPage<dynamic>> pages = <GetPage<dynamic>>[
-    GetPage<dynamic>(
-      name: AppRoutes.gallery,
-      page: () => const GalleryView(),
-      binding: GalleryBinding(),
-    ),
-  ];
+  static const String imageDetail = '/gallery/image';
+  static const String imageViewer = '/gallery/image/view';
 }

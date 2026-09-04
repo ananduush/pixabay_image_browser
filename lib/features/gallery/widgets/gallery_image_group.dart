@@ -8,10 +8,13 @@ import 'gallery_image_tile.dart';
 /// One feed group: a 4:3 hero with its caption, then up to three square
 /// tiles in a row. Columns stay equal-width even when the trio is short.
 class GalleryImageGroup extends StatelessWidget {
-  const GalleryImageGroup({super.key, required this.images})
+  const GalleryImageGroup({super.key, required this.images, this.onImageTap})
     : assert(images.length >= 1, 'A group needs a hero image');
 
   final List<PixabayImage> images;
+
+  /// Called with the tapped image; null leaves the tiles inert.
+  final ValueChanged<PixabayImage>? onImageTap;
 
   static const int trioSize = 3;
 
@@ -22,12 +25,17 @@ class GalleryImageGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tiles = trio;
+    final onImageTap = this.onImageTap;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         AspectRatio(
           aspectRatio: 4 / 3,
-          child: GalleryImageTile(image: hero, hero: true),
+          child: GalleryImageTile(
+            image: hero,
+            hero: true,
+            onTap: onImageTap == null ? null : () => onImageTap(hero),
+          ),
         ),
         const SizedBox(height: 9),
         Row(
@@ -55,7 +63,12 @@ class GalleryImageGroup extends StatelessWidget {
                 Expanded(
                   child: AspectRatio(
                     aspectRatio: 1,
-                    child: GalleryImageTile(image: image),
+                    child: GalleryImageTile(
+                      image: image,
+                      onTap: onImageTap == null
+                          ? null
+                          : () => onImageTap(image),
+                    ),
                   ),
                 ),
               for (var i = tiles.length; i < trioSize; i++)

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../core/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../controllers/gallery_controller.dart';
@@ -164,7 +165,12 @@ class _Body extends StatelessWidget {
                       query: query,
                     ),
                   ),
-                _GroupsSliver(groups: groups, underHeader: query.isNotEmpty),
+                _GroupsSliver(
+                  groups: groups,
+                  underHeader: query.isNotEmpty,
+                  onImageTap: (PixabayImage image) =>
+                      _openImage(controller, image),
+                ),
                 SliverToBoxAdapter(
                   child: GalleryFeedFooter(
                     status: status,
@@ -188,12 +194,25 @@ class _Body extends StatelessWidget {
   }
 }
 
+/// Drops the keyboard first: a focused field would otherwise take focus
+/// back — and raise the keyboard — the moment Details pops.
+void _openImage(GalleryController controller, PixabayImage image) {
+  controller.searchFocus.unfocus();
+  Get.toNamed<void>(AppRoutes.imageDetail, arguments: image);
+}
+
 class _GroupsSliver extends StatelessWidget {
-  const _GroupsSliver({required this.groups, required this.underHeader});
+  const _GroupsSliver({
+    required this.groups,
+    required this.underHeader,
+    required this.onImageTap,
+  });
 
   final List<List<PixabayImage>> groups;
 
   final bool underHeader;
+
+  final ValueChanged<PixabayImage> onImageTap;
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +226,7 @@ class _GroupsSliver extends StatelessWidget {
       sliver: SliverList.separated(
         itemCount: groups.length,
         itemBuilder: (BuildContext context, int index) =>
-            GalleryImageGroup(images: groups[index]),
+            GalleryImageGroup(images: groups[index], onImageTap: onImageTap),
         separatorBuilder: (BuildContext context, int index) =>
             const SizedBox(height: AppSpacing.lg),
       ),
