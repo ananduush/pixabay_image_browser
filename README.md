@@ -192,6 +192,23 @@ connection, Photos access denied (grant it in Settings), or couldn't save.
   (`maxSdkVersion="29"`); Android 10+ needs no permission to write to the
   media library. Minimum SDK 24.
 
+## App icon
+
+The launcher icon is generated from `assets/icon/app_icon.png` (iOS and legacy
+Android) and `assets/icon/app_icon_foreground.png` (Android adaptive foreground)
+by [flutter_launcher_icons](https://pub.dev/packages/flutter_launcher_icons); the
+configuration lives in `pubspec.yaml`. After changing either source image, run:
+
+```bash
+flutter pub get
+dart run flutter_launcher_icons
+```
+
+Use the Dart bundled with Flutter (`flutter/bin/dart`) if a different `dart` is
+first on your `PATH`. The generator also rewrites
+`ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS` in
+`ios/Runner.xcodeproj/project.pbxproj`; discard that change.
+
 ## Assignment bonus features
 
 Pagination / infinite scrolling · pull-to-refresh · image caching · unit and widget
