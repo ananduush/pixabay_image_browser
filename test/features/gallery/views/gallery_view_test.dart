@@ -13,7 +13,6 @@ import 'package:pixabay_image_browser/features/gallery/models/pixabay_page.dart'
 import 'package:pixabay_image_browser/features/gallery/repositories/gallery_repository.dart';
 import 'package:pixabay_image_browser/features/gallery/services/pixabay_exception.dart';
 import 'package:pixabay_image_browser/features/gallery/views/gallery_view.dart';
-import 'package:pixabay_image_browser/features/gallery/widgets/gallery_chips.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/gallery_error_view.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/gallery_feed_footer.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/gallery_image_group.dart';
@@ -137,7 +136,7 @@ void main() {
     Future<void> pumpLoadedFeed(WidgetTester tester, {int hits = 4}) async {
       when(repository.getImages).thenAnswer((_) async => pageWith(hits));
       await pumpGallery(tester);
-      expect(find.byType(GalleryChips), findsOneWidget);
+      expect(find.byType(GalleryImageGroup), findsWidgets);
     }
 
     Future<void> typeAndWait(WidgetTester tester, String text) async {
@@ -160,7 +159,6 @@ void main() {
       await typeAndWait(tester, 'fog');
 
       expect(find.text(GallerySearchingView.message('fog')), findsOneWidget);
-      expect(find.byType(GalleryChips), findsNothing);
       expect(find.byType(GalleryImageGroup), findsNothing);
       final editable = tester.widget<EditableText>(find.byType(EditableText));
       expect(editable.focusNode.hasFocus, isTrue);
@@ -201,7 +199,6 @@ void main() {
       );
       // lazy sliver, only one group fits
       expect(find.byType(GalleryImageGroup), findsAtLeastNWidgets(1));
-      expect(find.byType(GalleryChips), findsNothing);
       expect(
         find.bySemanticsLabel(GallerySearchField.clearLabel),
         findsOneWidget,
@@ -246,7 +243,6 @@ void main() {
       await tester.tap(find.text(GallerySearchEmptyView.backLabel));
       await tester.pump();
 
-      expect(find.byType(GalleryChips), findsOneWidget);
       expect(find.byType(GalleryImageGroup), findsOneWidget);
       expect(find.byType(GallerySkeleton), findsNothing);
       expect(
@@ -286,7 +282,7 @@ void main() {
         find.bySemanticsLabel(GallerySearchField.clearLabel),
         findsNothing,
       );
-      expect(find.byType(GalleryChips), findsOneWidget);
+      expect(find.byType(GalleryImageGroup), findsWidgets);
       expect(
         find.text(GallerySearchResultsHeader.queryLabel('fog')),
         findsNothing,
@@ -310,7 +306,6 @@ void main() {
 
       expect(find.text(GalleryErrorView.offlineTitle), findsOneWidget);
       expect(find.byType(GallerySearchField), findsOneWidget);
-      expect(find.byType(GalleryChips), findsNothing);
 
       await tester.tap(find.text(GalleryErrorView.retryLabel));
       await tester.pump();
@@ -400,7 +395,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Aperture'), findsOneWidget);
-      expect(find.byType(GalleryChips), findsOneWidget);
+      expect(find.byType(GalleryImageGroup), findsWidgets);
     });
 
     testWidgets('the API error caption names the searched query', (
@@ -440,7 +435,7 @@ void main() {
     Future<void> pumpLoadedFeed(WidgetTester tester, {int hits = 4}) async {
       when(repository.getImages).thenAnswer((_) async => pageWith(hits));
       await pumpGallery(tester);
-      expect(find.byType(GalleryChips), findsOneWidget);
+      expect(find.byType(GalleryImageGroup), findsWidgets);
     }
 
     Future<void> typeAndWait(WidgetTester tester, String text) async {

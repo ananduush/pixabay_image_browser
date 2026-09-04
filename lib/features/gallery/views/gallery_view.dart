@@ -8,7 +8,6 @@ import '../../../core/theme/app_spacing.dart';
 import '../controllers/gallery_controller.dart';
 import '../controllers/gallery_state.dart';
 import '../models/pixabay_image.dart';
-import '../widgets/gallery_chips.dart';
 import '../widgets/gallery_error_view.dart';
 import '../widgets/gallery_feed_footer.dart';
 import '../widgets/gallery_header.dart';
@@ -125,8 +124,6 @@ class _Body extends StatelessWidget {
                   onClear: controller.clearSearch,
                   onCancel: controller.cancelSearch,
                 ),
-                if (state case GalleryLoaded(isSearch: false))
-                  const GalleryChips(),
               ],
             ),
           ),
