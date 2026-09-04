@@ -3,10 +3,6 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
-/// Filled ink pill — the design's primary action ("Sign in"). Shows a
-/// spinner with [busyLabel] while [busy], and a muted paper look while not
-/// [enabled]; a muted button still reports taps so a form can explain what
-/// is missing.
 class FilledPillButton extends StatelessWidget {
   const FilledPillButton({
     super.key,
@@ -20,12 +16,10 @@ class FilledPillButton extends StatelessWidget {
 
   final String label;
 
-  /// Ignored while [busy].
   final VoidCallback? onPressed;
 
   final bool busy;
 
-  /// Replaces [label] while [busy] ("Signing in").
   final String? busyLabel;
 
   final bool enabled;
@@ -43,7 +37,6 @@ class FilledPillButton extends StatelessWidget {
       button: true,
       enabled: !busy,
       label: text,
-      // the label is the visible text; one node, not two
       excludeSemantics: true,
       child: GestureDetector(
         onTap: busy ? null : onPressed,

@@ -6,24 +6,16 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import '../models/auth_user.dart';
 import 'auth_exception.dart';
 
-/// The only file that talks to Supabase. Nothing above this layer sees a
-/// Supabase type: users come out as [AuthUser], failures as [AuthException].
 class SupabaseAuthService {
   const SupabaseAuthService({required supabase.GoTrueClient this._client});
 
-  /// No Supabase configuration: every call throws
-  /// [AuthMissingConfigException] and the SDK is never touched.
   const SupabaseAuthService.unconfigured() : _client = null;
 
   final supabase.GoTrueClient? _client;
 
-  /// Auth error codes the SDK's [supabase.ErrorCode] enum does not list.
   static const String invalidCredentialsCode = 'invalid_credentials';
   static const String emailAddressInvalidCode = 'email_address_invalid';
 
-  /// Initialises the Supabase SDK once, at startup, restoring any persisted
-  /// session. Missing configuration (or a failed initialise) degrades to the
-  /// unconfigured service so the app still boots into the Gallery.
   static Future<SupabaseAuthService> initialize({
     required String url,
     required String publishableKey,
@@ -36,7 +28,6 @@ class SupabaseAuthService {
       final instance = await supabase.Supabase.initialize(
         url: url,
         publishableKey: publishableKey,
-        // No email links or OAuth, so no deep-link listener.
         authOptions: const supabase.FlutterAuthClientOptions(
           detectSessionInUri: false,
         ),
@@ -53,12 +44,8 @@ class SupabaseAuthService {
   supabase.GoTrueClient get _auth =>
       _client ?? (throw const AuthMissingConfigException());
 
-  /// The restored/current user, if any. Synchronous: the SDK restores the
-  /// persisted session inside [initialize].
   AuthUser? currentUser() => _toUser(_auth.currentUser);
 
-  /// The session user after every auth event (sign in, sign out, token
-  /// refresh, restore, user deleted…); `null` means signed out.
   Stream<AuthUser?> userChanges() => _auth.onAuthStateChange
       .map((supabase.AuthState change) => _toUser(change.session?.user))
       .transform(
@@ -80,9 +67,6 @@ class SupabaseAuthService {
     });
   }
 
-  /// With confirmations disabled (the prepared configuration) Supabase
-  /// returns a session at once. A user without a session means the project
-  /// now requires confirmation, which is reported rather than hidden.
   Future<AuthUser> signUp({required String email, required String password}) {
     return _guard(() async {
       final response = await _auth.signUp(email: email, password: password);
@@ -93,15 +77,11 @@ class SupabaseAuthService {
     });
   }
 
-  /// Drops the local session (the SDK emits `signedOut` before revoking on
-  /// the server). An already-missing session is not an error.
   Future<void> signOut() {
     return _guard(() async {
       try {
         await _auth.signOut();
-      } on supabase.AuthSessionMissingException {
-        // Nothing to sign out of.
-      }
+      } on supabase.AuthSessionMissingException {}
     });
   }
 
@@ -113,8 +93,6 @@ class SupabaseAuthService {
     }
   }
 
-  /// Supabase failure → app failure, on structured fields only (type,
-  /// `code`, `statusCode`) — never on message text.
   @visibleForTesting
   static AuthException mapError(Object error) {
     return switch (error) {
@@ -166,7 +144,6 @@ class SupabaseAuthService {
     String? code,
     String? statusCode,
   }) {
-    // Structured detail only: never an email or a password.
     debugPrint(
       'SupabaseAuthService: unexpected auth failure '
       'code=$code status=$statusCode',

@@ -17,7 +17,6 @@ void main() {
   late MockAuthRepository repository;
 
   setUpAll(() {
-    // Fonts fall back to the test environment's defaults; no network.
     GoogleFonts.config.allowRuntimeFetching = false;
   });
 

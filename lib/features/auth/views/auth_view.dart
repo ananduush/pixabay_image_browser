@@ -13,8 +13,6 @@ import '../widgets/auth_error_row.dart';
 import '../widgets/auth_mode_link.dart';
 import '../widgets/auth_text_field.dart';
 
-/// Sign in / Create account, one screen with a mode link. Pops itself once
-/// a session exists, so callers land back where they came from.
 class AuthView extends GetView<AuthFormController> {
   const AuthView({super.key});
 
@@ -92,8 +90,6 @@ class _Form extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Rx reads happen inside this Obx, not the parent's, so mode, issue and
-    // failure changes rebuild the form.
     return Obx(() {
       final creating = controller.mode.value == AuthMode.createAccount;
       final issue = controller.issue.value;
@@ -109,7 +105,6 @@ class _Form extends StatelessWidget {
 
   Widget _layout({required bool creating, required String? message}) {
     return SingleChildScrollView(
-      // scrolling drops the keyboard; the CTA stays reachable on small phones
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       physics: const BouncingScrollPhysics(
         parent: AlwaysScrollableScrollPhysics(),
@@ -231,7 +226,6 @@ class _Form extends StatelessWidget {
   }
 }
 
-/// Plain 44pt chevron on paper — no glass, there is no photo underneath.
 class _BackButton extends StatelessWidget {
   const _BackButton();
 

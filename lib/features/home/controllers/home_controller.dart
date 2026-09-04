@@ -6,8 +6,6 @@ import '../../auth/controllers/auth_controller.dart';
 import '../../auth/controllers/auth_state.dart';
 import '../../gallery/controllers/gallery_controller.dart';
 
-/// Which tab the shell shows. Explore and Profile stay mounted side by side,
-/// so switching never rebuilds or refetches the feed.
 class HomeController extends GetxController {
   HomeController({required this._auth, required this._gallery});
 
@@ -16,7 +14,6 @@ class HomeController extends GetxController {
 
   final Rx<AppTab> tab = Rx<AppTab>(AppTab.explore);
 
-  /// Position in the shell's stack; Favourites has no page yet.
   int get stackIndex => switch (tab.value) {
     AppTab.explore || AppTab.favourites => 0,
     AppTab.profile => 1,
@@ -25,7 +22,6 @@ class HomeController extends GetxController {
   void onTabTap(AppTab tapped) {
     switch (tapped) {
       case AppTab.explore:
-        // Re-tapping the active tab returns to the header.
         if (tab.value == AppTab.explore) {
           _gallery.scrollToTop();
         } else {
@@ -38,8 +34,6 @@ class HomeController extends GetxController {
     }
   }
 
-  /// Favourites need an account: guests go straight to sign in and the tab
-  /// stays where it was. Signed-in users wait for the Favourites slice.
   void _openFavourites() {
     switch (_auth.state.value) {
       case AuthGuest() || AuthFailed() || AuthUnavailable():

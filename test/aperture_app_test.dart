@@ -32,10 +32,6 @@ void main() {
 
   tearDown(Get.reset);
 
-  /// A dependency that is already registered wins over the bindings'
-  /// lazyPut, so the real route → binding → controller wiring runs while
-  /// the repositories stay offline. The never-completing future keeps the
-  /// screen on the skeleton, so no image requests are attempted either.
   _MockRepository pendingGallery() {
     final repository = _MockRepository();
     when(
@@ -61,7 +57,6 @@ void main() {
     expect(find.byType(HomeView), findsOneWidget);
     expect(find.byType(GalleryView), findsOneWidget);
     expect(find.byType(GallerySkeleton), findsOneWidget);
-    // The app knows the auth state before the sign-in screen ever opens.
     expect(Get.isRegistered<AuthController>(), isTrue);
     expect(Get.find<AuthController>().state.value, isA<AuthGuest>());
     expect(Get.isRegistered<GalleryController>(), isTrue);
@@ -73,7 +68,6 @@ void main() {
     tester,
   ) async {
     pendingGallery();
-    // No auth mock: the binding falls back to the unconfigured service.
     await tester.pumpWidget(const ApertureApp());
     await tester.pump();
 

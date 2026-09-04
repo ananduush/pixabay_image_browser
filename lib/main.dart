@@ -10,8 +10,6 @@ import 'features/auth/services/supabase_auth_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Restores any persisted session before the first frame; without
-  // configuration the app still boots, with accounts unavailable.
   final authService = await SupabaseAuthService.initialize(
     url: Env.supabaseUrl,
     publishableKey: Env.supabasePublishableKey,
@@ -22,7 +20,6 @@ Future<void> main() async {
 class ApertureApp extends StatelessWidget {
   const ApertureApp({super.key, this.authService});
 
-  /// Null (tests, or nothing configured) means an unconfigured auth service.
   final SupabaseAuthService? authService;
 
   @override

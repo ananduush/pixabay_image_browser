@@ -23,7 +23,6 @@ void main() {
   late MockAuthRepository repository;
 
   setUpAll(() {
-    // Fonts fall back to the test environment's defaults; no network.
     GoogleFonts.config.allowRuntimeFetching = false;
   });
 
@@ -34,8 +33,6 @@ void main() {
 
   tearDown(Get.reset);
 
-  /// Pushes the auth route over a blank home, through the real page table
-  /// and bindings, so a successful submission has somewhere to pop back to.
   Future<AuthController> pumpAuth(
     WidgetTester tester, {
     bool unconfigured = false,
@@ -63,7 +60,6 @@ void main() {
 
   Finder field(int index) => find.byType(TextField).at(index);
 
-  /// The primary action; its label can also be the screen title.
   Finder cta(String label) => find.widgetWithText(FilledPillButton, label);
 
   Future<void> fill(
@@ -146,7 +142,6 @@ void main() {
     await tester.tap(find.bySemanticsLabel(linkFor(true)));
     await tester.pump();
     expect(find.text(AuthView.signInLead), findsOneWidget);
-    // typed values survive the switch
     expect(
       tester.widget<TextField>(field(0)).controller?.text,
       'new@aperture.app',
@@ -171,7 +166,6 @@ void main() {
     );
     expect(tester.widget<TextField>(field(1)).controller?.text, 'wrong');
 
-    // still usable: editing clears the error
     await tester.enterText(field(1), 'wrong2');
     await tester.pump();
     expect(find.text(AuthErrorRow.invalidCredentialsCopy), findsNothing);
@@ -228,7 +222,6 @@ void main() {
     addTearDown(tester.view.reset);
 
     await pumpAuth(tester);
-    // everything below the fold is reachable by scrolling, never clipped
     final link = find.bySemanticsLabel(linkFor(false), skipOffstage: false);
     await tester.ensureVisible(link);
     await tester.pump();

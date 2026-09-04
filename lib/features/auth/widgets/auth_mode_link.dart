@@ -4,12 +4,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../controllers/auth_form_state.dart';
 
-/// Text link under the primary action that flips the screen between
-/// signing in and creating an account.
 class AuthModeLink extends StatelessWidget {
   const AuthModeLink({super.key, required this.mode, required this.onTap});
 
-  /// The mode currently shown; the link offers the other one.
   final AuthMode mode;
   final VoidCallback onTap;
 

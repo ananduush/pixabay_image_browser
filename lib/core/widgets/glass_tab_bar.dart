@@ -5,18 +5,14 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'glass_surface.dart';
 
-/// The three destinations in the floating pill.
 enum AppTab { explore, favourites, profile }
 
-/// Floating glass pill with the Explore / Favourites / Profile tabs. Every
-/// tab reports its tap; what a tap does belongs to the shell.
 class GlassTabBar extends StatelessWidget {
   const GlassTabBar({super.key, required this.active, required this.onTap});
 
   final AppTab active;
   final ValueChanged<AppTab> onTap;
 
-  /// Design offset from the physical bottom edge, home indicator included.
   static const double designBottomInset = 40;
 
   static const String exploreLabel = 'Explore';

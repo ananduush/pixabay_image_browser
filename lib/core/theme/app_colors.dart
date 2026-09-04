@@ -40,8 +40,6 @@ abstract final class AppColors {
   // Tag chip hairline (rgba(255,255,255,.6)).
   static const Color chipBorder = Color(0x99FFFFFF);
 
-  // Filled pill button: rgba(22,19,15,.9) fill, white hairline and gloss,
-  // ink shadow; disabled look on paper.
   static const Color inkButton = Color(0xE616130F);
   static const Color buttonBorder = Color(0x38FFFFFF);
   static const Color buttonGloss = Color(0x29FFFFFF);
@@ -51,10 +49,8 @@ abstract final class AppColors {
   static const Color rule10 = Color(0x1A000000);
   static const Color text32 = Color(0x52000000);
 
-  // Profile avatar disc (rgba(22,19,15,.08)).
   static const Color inkFill8 = Color(0x1416130F);
 
-  // Sheet scrim (rgba(22,19,15,.34)) and drag handle (rgba(0,0,0,.16)).
   static const Color scrim = Color(0x5716130F);
   static const Color handle = Color(0x29000000);
 }

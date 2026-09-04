@@ -7,8 +7,6 @@ import '../../auth/views/profile_view.dart';
 import '../../gallery/views/gallery_view.dart';
 import '../controllers/home_controller.dart';
 
-/// Tabbed shell: Explore and Profile kept alive in an [IndexedStack] under
-/// the floating glass pill. The pill hides while the keyboard is up.
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
@@ -17,7 +15,6 @@ class HomeView extends GetView<HomeController> {
     final keyboardUp = MediaQuery.viewInsetsOf(context).bottom > 0;
     return Scaffold(
       backgroundColor: AppColors.paper,
-      // each tab's own Scaffold handles the keyboard, exactly as before
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: <Widget>[

@@ -24,14 +24,11 @@ import '../../../support/pixabay_fixtures.dart';
 
 class _MockGalleryRepository extends Mock implements GalleryRepository {}
 
-/// The shell through the real route table and bindings: tab switches must
-/// leave the Gallery exactly as it was.
 void main() {
   late _MockGalleryRepository gallery;
   late MockAuthRepository auth;
 
   setUpAll(() {
-    // Fonts fall back to the test environment's defaults; no network.
     GoogleFonts.config.allowRuntimeFetching = false;
     installPendingImageCache();
   });
@@ -44,7 +41,6 @@ void main() {
 
   tearDown(Get.reset);
 
-  /// One page that is also the last, so scrolling never asks for a page 2.
   PixabayPage pageWith(int count, {int firstId = 100}) {
     return PixabayPage.fromJson(<String, dynamic>{
       'total': count,
@@ -65,7 +61,6 @@ void main() {
     expect(find.byType(GalleryImageTile), findsWidgets);
   }
 
-  /// Route transition.
   Future<void> settleRoute(WidgetTester tester) async {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
@@ -107,7 +102,6 @@ void main() {
     expect(find.byType(GalleryImageTile), findsWidgets);
     expect(find.text(ProfileView.guestHeading), findsNothing);
     expect(feed().offset, 600);
-    // never refetched
     verify(gallery.getImages).called(1);
   });
 
@@ -212,7 +206,6 @@ void main() {
     expect(home().tab.value, AppTab.profile);
     expect(find.text(user.email), findsOneWidget);
     expect(find.text(ProfileView.logOutLabel), findsOneWidget);
-    // the Gallery never noticed
     verify(gallery.getImages).called(1);
   });
 

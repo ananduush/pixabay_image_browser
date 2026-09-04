@@ -1,5 +1,3 @@
-/// Shared fakes for the Auth slice: a mocktail repository plus a sample
-/// user, so no test ever touches Supabase.
 library;
 
 import 'dart:async';
@@ -22,8 +20,6 @@ AuthUser sampleUser({
   );
 }
 
-/// Stubs the snapshot and the event stream: [user] is the restored session
-/// (`null` = guest) and [changes] feeds later auth events.
 MockAuthRepository stubAuthRepository(
   MockAuthRepository repository, {
   AuthUser? user,

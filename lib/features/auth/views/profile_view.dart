@@ -14,8 +14,6 @@ import '../services/auth_exception.dart';
 import '../widgets/profile_identity.dart';
 import '../widgets/profile_rows.dart';
 
-/// Profile tab: the signed-out invitation or the signed-in account, straight
-/// from the app-wide [AuthController] state.
 class ProfileView extends GetView<AuthController> {
   const ProfileView({super.key});
 
@@ -36,10 +34,8 @@ class ProfileView extends GetView<AuthController> {
   static const String sourceValue = 'Pixabay';
   static const String versionLabel = 'Version';
 
-  /// Keep in step with `version:` in pubspec.yaml.
   static const String version = '1.0.0';
 
-  /// Room under the content so the floating pill never covers the button.
   static const double bottomSpacer = 130;
 
   @override
@@ -146,7 +142,6 @@ class _SignedIn extends StatelessWidget {
   }
 }
 
-/// Developer-facing: the build has no Supabase configuration.
 class _Unavailable extends StatelessWidget {
   const _Unavailable({required this.error});
 

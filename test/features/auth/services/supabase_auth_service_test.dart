@@ -9,7 +9,6 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
 class _MockGoTrueClient extends Mock implements supabase.GoTrueClient {}
 
-/// The only test that touches Supabase types — and only in memory.
 void main() {
   supabase.User user({String email = 'sam@aperture.app'}) {
     final parsed = supabase.User.fromJson(<String, dynamic>{

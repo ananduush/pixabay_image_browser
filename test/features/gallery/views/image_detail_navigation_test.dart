@@ -61,8 +61,6 @@ void main() {
 
   GalleryController controller() => Get.find<GalleryController>();
 
-  /// The registered repositories win over the bindings' lazyPut; the
-  /// bindings still build the controllers and link them to the home route.
   Future<void> pumpApp(WidgetTester tester) async {
     Get.put<GalleryRepository>(repository);
     Get.put<AuthRepository>(stubAuthRepository(MockAuthRepository()));

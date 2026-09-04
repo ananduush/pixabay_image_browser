@@ -27,7 +27,6 @@ void main() {
 
   Future<void> settle() => Future<void>.delayed(Duration.zero);
 
-  /// `Get.reset` skips `onClose`, so the subscription is closed explicitly.
   AuthController start({AuthUser? user}) {
     stubAuthRepository(repository, user: user, changes: changes);
     final controller = AuthController(repository: repository);
@@ -302,7 +301,6 @@ void main() {
     test('a failed server revoke still leaves a guest', () async {
       final controller = start(user: sampleUser());
       when(repository.signOut).thenAnswer((_) async {
-        // The SDK drops the local session before the revoke.
         when(repository.currentUser).thenReturn(null);
         throw const AuthNetworkException();
       });

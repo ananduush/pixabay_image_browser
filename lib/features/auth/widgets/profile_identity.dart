@@ -5,8 +5,6 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../models/auth_user.dart';
 
-/// Avatar disc with the account's initial, the email, and when the account
-/// was created — everything Supabase actually knows about the user.
 class ProfileIdentity extends StatelessWidget {
   const ProfileIdentity({super.key, required this.user});
 
@@ -62,7 +60,6 @@ class ProfileIdentity extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              // long addresses wrap once rather than losing their domain
               Text(
                 user.email,
                 maxLines: 2,

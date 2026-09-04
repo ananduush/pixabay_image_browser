@@ -5,9 +5,6 @@ import '../../../core/theme/app_typography.dart';
 import '../controllers/auth_form_state.dart';
 import '../services/auth_exception.dart';
 
-/// Critical glyph plus one line of copy under the fields. Owns the user
-/// copy for every [AuthException] and [AuthFormIssue], the way
-/// `GalleryErrorView` owns the Pixabay failure copy.
 class AuthErrorRow extends StatelessWidget {
   const AuthErrorRow({super.key, required this.message});
 
@@ -48,7 +45,6 @@ class AuthErrorRow extends StatelessWidget {
     AuthNetworkException() => networkCopy,
     AuthConfirmationRequiredException() => confirmationRequiredCopy,
     AuthUnexpectedException() => unexpectedCopy,
-    // developer-facing: the run instructions themselves
     AuthMissingConfigException(:final message) => message,
   };
 

@@ -163,7 +163,6 @@ void main() {
         expect(form.emailController.text, 'sam@aperture.app');
         expect(form.passwordController.text, 'wrong');
 
-        // Editing clears the failure so the form is usable again.
         form.passwordController.text = 'wrong2';
         expect(form.failure, isNull);
         expect(auth.state.value, isA<AuthGuest>());

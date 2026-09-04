@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// Underlined field with an uppercase label — the design's sign-in inputs.
-/// The rule thickens from 1 to 1.5 when focused.
 class AuthTextField extends StatelessWidget {
   const AuthTextField({
     super.key,
@@ -21,7 +19,6 @@ class AuthTextField extends StatelessWidget {
     this.hintBelow,
   });
 
-  /// Rendered uppercase.
   final String label;
   final String hint;
   final TextEditingController controller;
@@ -33,7 +30,6 @@ class AuthTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
 
-  /// Small note under the rule ("At least 8 characters.").
   final String? hintBelow;
 
   static const double focusedRule = 1.5;
@@ -52,7 +48,6 @@ class AuthTextField extends StatelessWidget {
             final focused = focusNode.hasFocus;
             final rule = focused ? focusedRule : restingRule;
             return Container(
-              // keep the text still while the rule thickens
               padding: EdgeInsets.only(
                 top: 10,
                 bottom: 10 + (focusedRule - rule),

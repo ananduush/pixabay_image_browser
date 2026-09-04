@@ -7,8 +7,6 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/filled_pill_button.dart';
 import '../../../core/widgets/glass_surface.dart';
 
-/// Glass sheet over Image Details when a guest taps "Save to favourites".
-/// "Sign in" closes the sheet and opens the auth screen; "Not now" closes it.
 class GuestFavouriteSheet extends StatelessWidget {
   const GuestFavouriteSheet({super.key});
 
@@ -27,7 +25,6 @@ class GuestFavouriteSheet extends StatelessWidget {
       barrierColor: AppColors.scrim,
       backgroundColor: Colors.transparent,
       elevation: 0,
-      // content-sized: never capped at the default fraction of the screen
       isScrollControlled: true,
       builder: (BuildContext context) => const GuestFavouriteSheet(),
     );

@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
-/// Outlined pill — the design's secondary action ("Try again", "Log out").
-/// A null [onPressed] disables it.
 class PillButton extends StatelessWidget {
   const PillButton({
     super.key,

@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// One key/value line of the Profile list; hairline rules above the first
-/// row and under every row.
 class ProfileRow extends StatelessWidget {
   const ProfileRow({super.key, required this.label, required this.value});
 
@@ -29,7 +27,6 @@ class ProfileRow extends StatelessWidget {
   }
 }
 
-/// The rule-topped list the rows sit in.
 class ProfileRows extends StatelessWidget {
   const ProfileRows({super.key, required this.children});
 

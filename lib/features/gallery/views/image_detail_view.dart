@@ -46,8 +46,6 @@ class ImageDetailView extends StatelessWidget {
     Get.back<void>();
   }
 
-  /// Guests get the sign-in sheet. A signed-in tap stays inert until the
-  /// Favourites slice adds the toggle.
   void _onFavouriteTap(BuildContext context) {
     if (Get.find<AuthController>().state.value.isAuthenticated) return;
     unawaited(GuestFavouriteSheet.show(context));
@@ -129,7 +127,6 @@ class ImageDetailView extends StatelessWidget {
               onTap: Get.back<void>,
             ),
           ),
-          // Download stays inert until its slice wires it.
           ImageDetailActions(onFavouriteTap: () => _onFavouriteTap(context)),
         ],
       ),

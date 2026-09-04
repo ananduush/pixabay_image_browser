@@ -36,8 +36,6 @@ void main() {
   PixabayImage imageWith([Map<String, dynamic> overrides = const {}]) =>
       PixabayImage.fromJson(<String, dynamic>{...sampleHit(), ...overrides});
 
-  /// Details reads the app-wide auth state only when the favourite control
-  /// is tapped; [user] is the restored session (`null` = guest).
   Future<void> pumpDetails(
     WidgetTester tester,
     PixabayImage image, {
