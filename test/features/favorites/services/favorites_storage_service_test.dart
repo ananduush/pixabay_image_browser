@@ -53,13 +53,19 @@ void main() {
     expect(restored.first.largeImageUrl, images.first.largeImageUrl);
   });
 
+  final corrupt = throwsA(
+    isA<FavoritesStorageException>().having(
+      (e) => e.operation,
+      'operation',
+      FavoritesStorageOperation.decode,
+    ),
+  );
+
   group('decode', () {
-    test('skips malformed entries and duplicate ids', () {
+    test('drops rows with an unusable id or a repeated id', () {
       final raw = jsonEncode(<Object?>[
-        1,
-        'text',
-        null,
         <String, dynamic>{'id': 0},
+        <String, dynamic>{'id': -1},
         sampleHit(id: 7),
         sampleHit(id: 7),
         sampleHit(id: 8),
@@ -68,10 +74,28 @@ void main() {
       expect(FavoritesStorageService.decode(raw).map((i) => i.id), <int>[7, 8]);
     });
 
-    test('an unreadable value is empty rather than an error', () {
-      expect(FavoritesStorageService.decode('not json'), isEmpty);
-      expect(FavoritesStorageService.decode('{"id": 1}'), isEmpty);
+    group('a corrupt store throws a decode exception', () {
+      test('when the value is not JSON', () {
+        expect(() => FavoritesStorageService.decode('not json'), corrupt);
+      });
+
+      test('when the root is not a list', () {
+        expect(() => FavoritesStorageService.decode('{"id": 1}'), corrupt);
+      });
+
+      test('when an entry is not an object', () {
+        for (final entry in <Object?>[1, 'text', null]) {
+          final raw = jsonEncode(<Object?>[sampleHit(id: 7), entry]);
+          expect(() => FavoritesStorageService.decode(raw), corrupt);
+        }
+      });
     });
+  });
+
+  test('a corrupt value surfaces through read as a decode exception', () {
+    when(() => preferences.getString(key)).thenAnswer((_) async => 'not json');
+
+    expect(() => service.read(userId), corrupt);
   });
 
   test('a refused read surfaces as a read exception', () {

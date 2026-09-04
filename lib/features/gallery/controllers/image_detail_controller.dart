@@ -27,6 +27,11 @@ class ImageDetailController extends GetxController {
     } on ImageDownloadException catch (error) {
       debugPrint('ImageDetailController: download failed: $error');
       download.value = DownloadFailed(error);
+    } catch (error) {
+      // The service wraps everything it knows about; anything else must
+      // still release the button rather than leave it spinning.
+      debugPrint('ImageDetailController: unexpected download error: $error');
+      download.value = DownloadFailed(ImageDownloadFailedException(error));
     }
     return download.value;
   }

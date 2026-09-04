@@ -8,6 +8,8 @@ import 'package:pixabay_image_browser/features/auth/models/auth_user.dart';
 import 'package:pixabay_image_browser/features/favorites/controllers/favorites_controller.dart';
 import 'package:pixabay_image_browser/features/favorites/controllers/favorites_state.dart';
 import 'package:pixabay_image_browser/features/favorites/repositories/favorites_repository.dart';
+import 'package:pixabay_image_browser/features/favorites/services/favorites_storage_exception.dart';
+import 'package:pixabay_image_browser/features/favorites/services/favorites_storage_service.dart';
 import 'package:pixabay_image_browser/features/gallery/models/pixabay_image.dart';
 
 import '../../../support/auth_fixtures.dart';
@@ -313,5 +315,65 @@ void main() {
     expect(one, isNot(FavoritesLoaded('v', <PixabayImage>[imageWith(1)])));
     expect(const FavoritesInactive(), const FavoritesInactive());
     expect(FavoritesLoading('u'), FavoritesLoading('u'));
+  });
+
+  test('a corrupt store shows the error state and blocks saves', () async {
+    final key = FavoritesStorageService.keyFor(userA.id);
+    storage.store[key] = 'not json';
+    final controller = start(userA);
+    await settle();
+
+    final failed = isA<FavoritesLoadFailed>().having(
+      (s) => s.error.operation,
+      'operation',
+      FavoritesStorageOperation.decode,
+    );
+    expect(controller.state.value, failed);
+    expect(controller.count, isNull);
+
+    expect(await controller.add(imageWith(1)), isFalse);
+    expect(await controller.remove(1), isFalse);
+    expect(controller.state.value, failed);
+    expect(storage.writes, 0);
+    expect(storage.store[key], 'not json');
+
+    await controller.retryLoad();
+    await settle();
+    expect(controller.state.value, failed);
+  });
+
+  test('an unexpected load error is reported as a storage failure', () async {
+    final repository = _MockFavoritesRepository();
+    when(() => repository.load(userA.id)).thenThrow(StateError('boom'));
+    final controller = start(userA, repository: repository);
+    await settle();
+
+    expect(
+      controller.state.value,
+      isA<FavoritesLoadFailed>()
+          .having(
+            (s) => s.error.operation,
+            'operation',
+            FavoritesStorageOperation.read,
+          )
+          .having((s) => s.error.cause, 'cause', isA<StateError>()),
+    );
+  });
+
+  test('an unexpected error during resync does not escape a save', () async {
+    final repository = _MockFavoritesRepository();
+    when(
+      () => repository.load(userA.id),
+    ).thenAnswer((_) async => const <PixabayImage>[]);
+    final controller = start(userA, repository: repository);
+    await settle();
+    expect(controller.state.value, isA<FavoritesLoaded>());
+
+    final image = imageWith(1);
+    when(() => repository.add(userA.id, image)).thenThrow(StateError('add'));
+    when(() => repository.load(userA.id)).thenThrow(StateError('load'));
+
+    expect(await controller.add(image), isFalse);
+    expect(controller.state.value, isA<FavoritesLoadFailed>());
   });
 }

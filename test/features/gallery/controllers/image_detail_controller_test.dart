@@ -65,4 +65,24 @@ void main() {
     );
     expect(controller.isSaving, isFalse);
   });
+
+  test('an unexpected error still releases the button as a failure', () async {
+    when(() => downloads.saveToPhotos(image)).thenThrow(StateError('boom'));
+
+    final result = await controller.saveToPhotos(image);
+
+    expect(
+      result,
+      isA<DownloadFailed>().having(
+        (s) => s.error,
+        'error',
+        isA<ImageDownloadFailedException>().having(
+          (e) => e.cause,
+          'cause',
+          isA<StateError>(),
+        ),
+      ),
+    );
+    expect(controller.isSaving, isFalse);
+  });
 }

@@ -64,8 +64,11 @@ class FavoritesView extends GetView<FavoritesController> {
       child: FavoritesLockedView(),
     ),
     FavoritesLoading() => const SliverToBoxAdapter(child: SizedBox.shrink()),
-    FavoritesLoadFailed() => SliverToBoxAdapter(
-      child: FavoritesStorageErrorView(onRetry: controller.retryLoad),
+    FavoritesLoadFailed(:final error) => SliverToBoxAdapter(
+      child: FavoritesStorageErrorView(
+        error: error,
+        onRetry: controller.retryLoad,
+      ),
     ),
     FavoritesLoaded(:final images) when images.isEmpty => SliverToBoxAdapter(
       child: StateView(

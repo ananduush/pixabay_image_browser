@@ -46,3 +46,6 @@ app.*.map.json
 
 # Environment secrets (Pixabay API key, Supabase client config) — never commit
 env.json
+
+# Claude Code worktrees and session files
+.claude/

@@ -22,13 +22,10 @@ abstract final class AppColors {
 
   // Rules and strokes (rgba(0,0,0,x)).
   static const Color rule50 = Color(0x80000000);
-  static const Color rule40 = Color(0x66000000);
   static const Color rule35 = Color(0x59000000);
   static const Color rule28 = Color(0x47000000);
-  static const Color rule25 = Color(0x40000000);
   static const Color rule20 = Color(0x33000000);
   static const Color rule9 = Color(0x17000000);
-  static const Color rule7 = Color(0x12000000);
 
   // Glass surfaces.
   static const Color glassFill = Color(0x80FBFAF8);

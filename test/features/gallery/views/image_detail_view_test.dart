@@ -290,6 +290,15 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text(ImageDetailView.downloadDenied), findsOneWidget);
+    await tester.pump(const Duration(seconds: 4));
+
+    when(
+      () => downloads.saveToPhotos(image),
+    ).thenThrow(ImageDownloadFailedException(StateError('disk')));
+    await tester.tap(find.bySemanticsLabel(ImageDetailActions.downloadLabel));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text(ImageDetailView.downloadFailed), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
