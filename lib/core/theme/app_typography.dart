@@ -5,6 +5,11 @@ import 'app_colors.dart';
 
 /// Type scale from the Aperture design.
 /// Newsreader carries titles and captions, Instrument Sans everything else.
+///
+/// Only Instrument Sans Regular/Medium and Newsreader Regular are bundled
+/// (assets/google_fonts) and runtime fetching is off, so a new weight or an
+/// italic needs its static file added there or it falls back to the
+/// platform font.
 abstract final class AppTypography {
   static TextStyle serif(
     double size, {

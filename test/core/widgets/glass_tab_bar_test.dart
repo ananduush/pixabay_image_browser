@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pixabay_image_browser/core/widgets/glass_tab_bar.dart';
 
 void main() {
+  setUpAll(() {
+    // Fonts fall back to the test environment's defaults; no network.
+    GoogleFonts.config.allowRuntimeFetching = false;
+  });
+
   Future<void> pumpBar(
     WidgetTester tester, {
     required AppTab active,

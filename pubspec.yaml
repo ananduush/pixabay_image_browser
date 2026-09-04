@@ -38,3 +38,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # Static instances of the two families google_fonts resolves by file name
+  # (<Family>-<Weight>.ttf); runtime fetching is disabled in main.dart.
+  assets:
+    - assets/google_fonts/

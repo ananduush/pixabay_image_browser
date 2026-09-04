@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/glass_icon_button.dart';
 
 void main() {
+  setUpAll(() {
+    // Fonts fall back to the test environment's defaults; no network.
+    GoogleFonts.config.allowRuntimeFetching = false;
+  });
+
   testWidgets('is a 44pt labelled button that reports taps', (tester) async {
     var taps = 0;
     await tester.pumpWidget(
