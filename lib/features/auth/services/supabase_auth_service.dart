@@ -81,7 +81,9 @@ class SupabaseAuthService {
     return _guard(() async {
       try {
         await _auth.signOut();
-      } on supabase.AuthSessionMissingException {}
+      } on supabase.AuthSessionMissingException {
+        return;
+      }
     });
   }
 
