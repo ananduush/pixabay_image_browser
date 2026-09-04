@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:pixabay_image_browser/core/routes/app_pages.dart';
 import 'package:pixabay_image_browser/core/routes/app_routes.dart';
+import 'package:pixabay_image_browser/features/auth/bindings/auth_binding.dart';
+import 'package:pixabay_image_browser/features/auth/repositories/auth_repository.dart';
 import 'package:pixabay_image_browser/features/gallery/controllers/gallery_controller.dart';
 import 'package:pixabay_image_browser/features/gallery/controllers/gallery_state.dart';
 import 'package:pixabay_image_browser/features/gallery/models/pixabay_page.dart';
@@ -18,6 +20,7 @@ import 'package:pixabay_image_browser/features/gallery/widgets/glass_icon_button
 import 'package:pixabay_image_browser/features/gallery/widgets/image_detail_hero.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/image_detail_tags.dart';
 
+import '../../../support/auth_fixtures.dart';
 import '../../../support/fake_image_cache.dart';
 import '../../../support/pixabay_fixtures.dart';
 
@@ -58,12 +61,17 @@ void main() {
 
   GalleryController controller() => Get.find<GalleryController>();
 
-  /// The registered repository wins over the binding's lazyPut; the binding
-  /// still builds the controller and links it to the gallery route.
+  /// The registered repositories win over the bindings' lazyPut; the
+  /// bindings still build the controllers and link them to the home route.
   Future<void> pumpApp(WidgetTester tester) async {
     Get.put<GalleryRepository>(repository);
+    Get.put<AuthRepository>(stubAuthRepository(MockAuthRepository()));
     await tester.pumpWidget(
-      GetMaterialApp(initialRoute: AppRoutes.gallery, getPages: AppPages.pages),
+      GetMaterialApp(
+        initialBinding: AuthBinding(),
+        initialRoute: AppRoutes.home,
+        getPages: AppPages.pages,
+      ),
     );
     await tester.pump();
     await tester.pump();

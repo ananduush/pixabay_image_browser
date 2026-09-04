@@ -44,5 +44,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Environment secrets (Pixabay API key) — never commit
+# Environment secrets (Pixabay API key, Supabase client config) — never commit
 env.json

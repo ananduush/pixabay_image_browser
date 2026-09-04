@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pixabay_image_browser/core/routes/app_pages.dart';
+import 'package:pixabay_image_browser/core/widgets/filled_pill_button.dart';
+import 'package:pixabay_image_browser/features/auth/controllers/auth_controller.dart';
+import 'package:pixabay_image_browser/features/auth/models/auth_user.dart';
+import 'package:pixabay_image_browser/features/auth/views/auth_view.dart';
+import 'package:pixabay_image_browser/features/auth/widgets/guest_favourite_sheet.dart';
 import 'package:pixabay_image_browser/features/gallery/models/pixabay_image.dart';
 import 'package:pixabay_image_browser/features/gallery/views/image_detail_view.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/glass_icon_button.dart';
@@ -10,6 +16,7 @@ import 'package:pixabay_image_browser/features/gallery/widgets/image_detail_crea
 import 'package:pixabay_image_browser/features/gallery/widgets/image_detail_hero.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/image_detail_stats.dart';
 
+import '../../../support/auth_fixtures.dart';
 import '../../../support/fake_image_cache.dart';
 import '../../../support/pixabay_fixtures.dart';
 
@@ -29,9 +36,23 @@ void main() {
   PixabayImage imageWith([Map<String, dynamic> overrides = const {}]) =>
       PixabayImage.fromJson(<String, dynamic>{...sampleHit(), ...overrides});
 
-  Future<void> pumpDetails(WidgetTester tester, PixabayImage image) async {
+  /// Details reads the app-wide auth state only when the favourite control
+  /// is tapped; [user] is the restored session (`null` = guest).
+  Future<void> pumpDetails(
+    WidgetTester tester,
+    PixabayImage image, {
+    AuthUser? user,
+  }) async {
+    Get.put<AuthController>(
+      AuthController(
+        repository: stubAuthRepository(MockAuthRepository(), user: user),
+      ),
+    );
     await tester.pumpWidget(
-      GetMaterialApp(home: ImageDetailView(image: image)),
+      GetMaterialApp(
+        home: ImageDetailView(image: image),
+        getPages: AppPages.pages,
+      ),
     );
     await tester.pump();
   }
@@ -117,16 +138,51 @@ void main() {
     expect(find.text('7,671'), findsOneWidget);
   });
 
-  testWidgets('the favourite and download controls are inert for now', (
+  testWidgets('a guest tapping favourite gets the sign-in sheet', (
     tester,
   ) async {
     await pumpDetails(tester, imageWith());
 
     await tester.tap(find.bySemanticsLabel(ImageDetailActions.favouriteLabel));
+    await tester.pumpAndSettle();
+
+    expect(find.text(GuestFavouriteSheet.title), findsOneWidget);
+    expect(find.text(GuestFavouriteSheet.body), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel(GuestFavouriteSheet.dismissLabel));
+    await tester.pumpAndSettle();
+
+    expect(find.text(GuestFavouriteSheet.title), findsNothing);
+    expect(find.byType(ImageDetailView), findsOneWidget);
+  });
+
+  testWidgets('the sheet\'s Sign in closes it and opens the auth screen', (
+    tester,
+  ) async {
+    await pumpDetails(tester, imageWith());
+
+    await tester.tap(find.bySemanticsLabel(ImageDetailActions.favouriteLabel));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(FilledPillButton, GuestFavouriteSheet.signInLabel),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AuthView), findsOneWidget);
+    expect(find.text(GuestFavouriteSheet.title), findsNothing);
+  });
+
+  testWidgets('favourite stays inert when signed in; download is inert', (
+    tester,
+  ) async {
+    await pumpDetails(tester, imageWith(), user: sampleUser());
+
+    await tester.tap(find.bySemanticsLabel(ImageDetailActions.favouriteLabel));
     await tester.tap(find.bySemanticsLabel(ImageDetailActions.downloadLabel));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+    expect(find.text(GuestFavouriteSheet.title), findsNothing);
     expect(find.byType(ImageDetailView), findsOneWidget);
   });
 

@@ -142,4 +142,64 @@ abstract final class AppTypography {
 
   /// Avatar fallback initial — Newsreader 12.
   static TextStyle get avatarInitial => serif(12);
+
+  // Named roles used by Auth: sign in, Profile and the guest sheet.
+
+  /// Sign-in screen title — Newsreader 32, line-height 1.15, -.015em.
+  static TextStyle get screenTitle =>
+      serif(32, height: 1.15, letterSpacing: -0.48);
+
+  /// Tab title ("Profile") — Newsreader 25.
+  static TextStyle get sectionTitle => serif(25);
+
+  /// Logged-out Profile heading — Newsreader 27, line-height 1.2.
+  static TextStyle get profileHeading => serif(27, height: 1.2);
+
+  /// Lead copy under a title — Instrument Sans 14, 62% ink, line-height 1.65.
+  static TextStyle get lead => sans(14, color: AppColors.text62, height: 1.65);
+
+  /// Field label — Instrument Sans 10.5, +.08em, uppercase.
+  static TextStyle get fieldLabel => label(10.5, tracking: 0.08);
+
+  /// Field input — Instrument Sans 17.
+  static TextStyle get input => sans(17);
+
+  /// Field hint below an input — Instrument Sans 12, 56% ink.
+  static TextStyle get fieldHint => sans(12, color: AppColors.text56);
+
+  /// Inline form error — Instrument Sans 13, critical.
+  static TextStyle get formError => sans(13, color: AppColors.critical);
+
+  /// Filled pill label — Instrument Sans 15 medium on paper.
+  static TextStyle get filledButton =>
+      sans(15, color: AppColors.paper, weight: FontWeight.w500);
+
+  /// Filled pill label, disabled look — Instrument Sans 15 medium, 32% ink.
+  static TextStyle get filledButtonDisabled =>
+      sans(15, color: AppColors.text32, weight: FontWeight.w500);
+
+  /// Profile identity line — Newsreader 20.
+  static TextStyle get profileName => serif(20);
+
+  /// Profile secondary line — Instrument Sans 13, 62% ink.
+  static TextStyle get profileMeta => sans(13, color: AppColors.text62);
+
+  /// Key/value row key — Instrument Sans 14, 55% ink.
+  static TextStyle get rowKey => sans(14, color: AppColors.text55);
+
+  /// Key/value row value — Instrument Sans 14.
+  static TextStyle get rowValue => sans(14);
+
+  /// Sheet title — Newsreader 24, line-height 1.2.
+  static TextStyle get sheetTitle => serif(24, height: 1.2);
+
+  /// Sheet body — Instrument Sans 13.5, 55% ink, line-height 1.6.
+  static TextStyle get sheetBody =>
+      sans(13.5, color: AppColors.text55, height: 1.6);
+
+  /// Sheet dismiss text button — Instrument Sans 14, 62% ink.
+  static TextStyle get sheetDismiss => sans(14, color: AppColors.text62);
+
+  /// Profile avatar initial — Newsreader 20.
+  static TextStyle get avatarInitialLarge => serif(20);
 }
