@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../features/auth/bindings/auth_form_binding.dart';
 import '../../features/auth/views/auth_view.dart';
+import '../../features/gallery/bindings/image_detail_binding.dart';
 import '../../features/gallery/models/pixabay_image.dart';
 import '../../features/home/bindings/home_binding.dart';
 import '../../features/home/views/home_view.dart';
@@ -21,10 +22,11 @@ abstract final class AppPages {
       page: () => const AuthView(),
       binding: AuthFormBinding(),
     ),
-    // Details and the viewer render the PixabayImage they are given; neither
-    // needs a controller, so neither has a binding.
+    // Details and the viewer render the PixabayImage they are given; the
+    // Details binding only exists for the download.
     GetPage<dynamic>(
       name: AppRoutes.imageDetail,
+      binding: ImageDetailBinding(),
       page: () {
         final Object? args = Get.arguments;
         return args is PixabayImage

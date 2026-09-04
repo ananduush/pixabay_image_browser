@@ -5,10 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:pixabay_image_browser/core/routes/app_pages.dart';
 import 'package:pixabay_image_browser/core/routes/app_routes.dart';
+import 'package:pixabay_image_browser/core/widgets/glass_tab_bar.dart';
 import 'package:pixabay_image_browser/features/auth/bindings/auth_binding.dart';
+import 'package:pixabay_image_browser/features/auth/models/auth_user.dart';
 import 'package:pixabay_image_browser/features/auth/repositories/auth_repository.dart';
 import 'package:pixabay_image_browser/features/gallery/controllers/gallery_controller.dart';
 import 'package:pixabay_image_browser/features/gallery/controllers/gallery_state.dart';
+import 'package:pixabay_image_browser/features/gallery/models/pixabay_image.dart';
 import 'package:pixabay_image_browser/features/gallery/models/pixabay_page.dart';
 import 'package:pixabay_image_browser/features/gallery/repositories/gallery_repository.dart';
 import 'package:pixabay_image_browser/features/gallery/views/gallery_view.dart';
@@ -19,9 +22,11 @@ import 'package:pixabay_image_browser/features/gallery/widgets/gallery_search_re
 import 'package:pixabay_image_browser/features/gallery/widgets/glass_icon_button.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/image_detail_hero.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/image_detail_tags.dart';
+import 'package:pixabay_image_browser/features/home/controllers/home_controller.dart';
 
 import '../../../support/auth_fixtures.dart';
 import '../../../support/fake_image_cache.dart';
+import '../../../support/favorites_fixtures.dart';
 import '../../../support/pixabay_fixtures.dart';
 
 class _MockRepository extends Mock implements GalleryRepository {}
@@ -30,6 +35,7 @@ class _MockRepository extends Mock implements GalleryRepository {}
 /// the controller's lifetime is the one the app has.
 void main() {
   late _MockRepository repository;
+  late FakeFavoritesStorageService storage;
 
   setUpAll(() {
     // Fonts fall back to the test environment's defaults; no network.
@@ -40,6 +46,7 @@ void main() {
   setUp(() {
     Get.testMode = true;
     repository = _MockRepository();
+    storage = FakeFavoritesStorageService();
   });
 
   tearDown(Get.reset);
@@ -61,9 +68,12 @@ void main() {
 
   GalleryController controller() => Get.find<GalleryController>();
 
-  Future<void> pumpApp(WidgetTester tester) async {
+  Future<void> pumpApp(WidgetTester tester, {AuthUser? user}) async {
     Get.put<GalleryRepository>(repository);
-    Get.put<AuthRepository>(stubAuthRepository(MockAuthRepository()));
+    Get.put<AuthRepository>(
+      stubAuthRepository(MockAuthRepository(), user: user),
+    );
+    registerFavoritesFakes(storage: storage);
     await tester.pumpWidget(
       GetMaterialApp(
         initialBinding: AuthBinding(),
@@ -343,5 +353,48 @@ void main() {
 
     expect(find.byType(ImageDetailMissingView), findsNothing);
     expect(find.byType(GalleryImageTile), findsWidgets);
+  });
+
+  testWidgets('a tag tapped in a favourite\'s Details lands on Explore', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final user = sampleUser();
+    final image = PixabayImage.fromJson(
+      sampleHit(id: 700, tags: 'dune, sand, heat'),
+    );
+    storage.seed(user.id, <PixabayImage>[image]);
+    when(
+      repository.getImages,
+    ).thenAnswer((_) async => pageWith(20, totalHits: 20));
+    when(
+      () => repository.getImages(query: 'sand', page: 1, perPage: 20),
+    ).thenAnswer((_) async => pageWith(3, firstId: 3000));
+    await pumpApp(tester, user: user);
+
+    await tester.tap(find.bySemanticsLabel(GlassTabBar.favouritesLabel));
+    await tester.pump();
+    await openTile(
+      tester,
+      find.bySemanticsLabel(GalleryImageTile.openLabel(image)),
+    );
+
+    await tester.tap(find.bySemanticsLabel(ImageDetailTags.tagLabel('sand')));
+    await settleRoute(tester);
+
+    expect(find.byType(ImageDetailView), findsNothing);
+    expect(Get.find<HomeController>().tab.value, AppTab.explore);
+    expect(find.byType(GalleryView), findsOneWidget);
+    expect(controller().searchController.text, 'sand');
+    expect(
+      find.text(GallerySearchResultsHeader.queryLabel('sand')),
+      findsOneWidget,
+    );
+    verify(
+      () => repository.getImages(query: 'sand', page: 1, perPage: 20),
+    ).called(1);
+    expect(tester.takeException(), isNull);
   });
 }

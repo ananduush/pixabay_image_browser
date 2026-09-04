@@ -17,6 +17,8 @@ class GalleryImageTile extends StatelessWidget {
     required this.image,
     this.hero = false,
     this.onTap,
+    this.imageUrl,
+    this.memCacheWidth,
   });
 
   final PixabayImage image;
@@ -26,6 +28,13 @@ class GalleryImageTile extends StatelessWidget {
   final bool hero;
 
   final VoidCallback? onTap;
+
+  /// Overrides the URL picked by [hero]; Favourites passes the large image,
+  /// which Pixabay does not document as expiring.
+  final String? imageUrl;
+
+  /// Decode width cap for oversized sources in small tiles.
+  final int? memCacheWidth;
 
   static String openLabel(PixabayImage image) => 'Open ${image.title}';
 
@@ -46,7 +55,9 @@ class GalleryImageTile extends StatelessWidget {
             child: ColoredBox(
               color: AppColors.inkFill7,
               child: CachedNetworkImage(
-                imageUrl: hero ? image.webformatUrl : image.tileUrl,
+                imageUrl:
+                    imageUrl ?? (hero ? image.webformatUrl : image.tileUrl),
+                memCacheWidth: memCacheWidth,
                 fit: BoxFit.cover,
                 fadeInDuration: const Duration(milliseconds: 250),
                 placeholder: (BuildContext context, String url) =>

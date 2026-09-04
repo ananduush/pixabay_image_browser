@@ -12,6 +12,7 @@ class FilledPillButton extends StatelessWidget {
     this.busyLabel,
     this.enabled = true,
     this.height = defaultHeight,
+    this.icon,
   });
 
   final String label;
@@ -24,6 +25,11 @@ class FilledPillButton extends StatelessWidget {
 
   final bool enabled;
   final double height;
+
+  /// Optional leading glyph (the Details "Saved to favourites" heart).
+  final IconData? icon;
+
+  static const double iconSize = 16;
 
   static const double defaultHeight = 56;
   static const double spinnerSize = 15;
@@ -98,6 +104,12 @@ class FilledPillButton extends StatelessWidget {
                             color: AppColors.paper,
                             backgroundColor: AppColors.paperFill35,
                           ),
+                        ),
+                      if (icon != null && !busy)
+                        Icon(
+                          icon,
+                          size: iconSize,
+                          color: muted ? AppColors.text32 : AppColors.paper,
                         ),
                       Text(
                         text,

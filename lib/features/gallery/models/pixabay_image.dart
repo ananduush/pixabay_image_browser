@@ -34,6 +34,26 @@ class PixabayImage {
     );
   }
 
+  /// Inverse of [fromJson] using Pixabay's own key names, so a persisted
+  /// favourite re-enters through the same defensive parser as a live hit.
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'id': id,
+      'pageURL': pageUrl,
+      'tags': tags.join(', '),
+      'previewURL': previewUrl,
+      'webformatURL': webformatUrl,
+      'largeImageURL': largeImageUrl,
+      'imageWidth': imageWidth,
+      'imageHeight': imageHeight,
+      'views': views,
+      'downloads': downloads,
+      'likes': likes,
+      'user': user,
+      'userImageURL': userImageUrl,
+    };
+  }
+
   final int id;
   final String pageUrl;
   final List<String> tags;

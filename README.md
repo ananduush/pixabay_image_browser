@@ -8,6 +8,7 @@ A Flutter mobile application for browsing, searching, and favoriting images from
 - Browse Pixabay images in a grid
 - Search images by keyword
 - View image details
+- Save any image to the device's Photos library
 - Email/password accounts with Supabase Auth: sign in, create account, log out;
   the session is restored on launch
 - Favorites for logged-in users: add, view, delete — persisted across restarts
@@ -18,7 +19,8 @@ A Flutter mobile application for browsing, searching, and favoriting images from
 - **GetX** — state management, routing, and dependency injection
 - **supabase_flutter** — Supabase Auth (email/password); the SDK persists and
   restores the session
-- **GetStorage** — local key-value storage (favorites)
+- **shared_preferences** — local key/value storage for Favourites, one
+  namespace per Supabase user
 - **Pixabay REST API** — image data
 - **cached_network_image** — image loading and caching
 

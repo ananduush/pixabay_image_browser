@@ -95,4 +95,50 @@ void main() {
       expect(page.totalHits, 0);
     });
   });
+
+  group('PixabayImage.toJson', () {
+    test('round-trips through fromJson with Pixabay key names', () {
+      final image = PixabayImage.fromJson(sampleHit());
+
+      final json = image.toJson();
+      final restored = PixabayImage.fromJson(json);
+
+      expect(json['tags'], 'blossom, bloom, flower');
+      expect(json['webformatURL'], image.webformatUrl);
+      expect(json['largeImageURL'], image.largeImageUrl);
+      expect(json['userImageURL'], image.userImageUrl);
+      expect(restored, image);
+      expect(restored.tags, image.tags);
+      expect(restored.title, image.title);
+      expect(restored.user, image.user);
+      expect(restored.views, image.views);
+      expect(restored.downloads, image.downloads);
+      expect(restored.likes, image.likes);
+      expect(restored.imageWidth, image.imageWidth);
+      expect(restored.imageHeight, image.imageHeight);
+      expect(restored.previewUrl, image.previewUrl);
+      expect(restored.pageUrl, image.pageUrl);
+    });
+
+    test('persists only the fields the app reads', () {
+      expect(
+        PixabayImage.fromJson(sampleHit()).toJson().keys,
+        unorderedEquals(<String>[
+          'id',
+          'pageURL',
+          'tags',
+          'previewURL',
+          'webformatURL',
+          'largeImageURL',
+          'imageWidth',
+          'imageHeight',
+          'views',
+          'downloads',
+          'likes',
+          'user',
+          'userImageURL',
+        ]),
+      );
+    });
+  });
 }
