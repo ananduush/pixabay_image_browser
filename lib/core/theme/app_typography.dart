@@ -142,4 +142,44 @@ abstract final class AppTypography {
 
   /// Avatar fallback initial — Newsreader 12.
   static TextStyle get avatarInitial => serif(12);
+
+  static TextStyle get screenTitle =>
+      serif(32, height: 1.15, letterSpacing: -0.48);
+
+  static TextStyle get sectionTitle => serif(25);
+
+  static TextStyle get profileHeading => serif(27, height: 1.2);
+
+  static TextStyle get lead => sans(14, color: AppColors.text62, height: 1.65);
+
+  static TextStyle get fieldLabel => label(10.5, tracking: 0.08);
+
+  static TextStyle get input => sans(17);
+
+  static TextStyle get fieldHint => sans(12, color: AppColors.text56);
+
+  static TextStyle get formError => sans(13, color: AppColors.critical);
+
+  static TextStyle get filledButton =>
+      sans(15, color: AppColors.paper, weight: FontWeight.w500);
+
+  static TextStyle get filledButtonDisabled =>
+      sans(15, color: AppColors.text32, weight: FontWeight.w500);
+
+  static TextStyle get profileName => serif(20);
+
+  static TextStyle get profileMeta => sans(13, color: AppColors.text62);
+
+  static TextStyle get rowKey => sans(14, color: AppColors.text55);
+
+  static TextStyle get rowValue => sans(14);
+
+  static TextStyle get sheetTitle => serif(24, height: 1.2);
+
+  static TextStyle get sheetBody =>
+      sans(13.5, color: AppColors.text55, height: 1.6);
+
+  static TextStyle get sheetDismiss => sans(14, color: AppColors.text62);
+
+  static TextStyle get avatarInitialLarge => serif(20);
 }

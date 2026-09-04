@@ -1,0 +1,66 @@
+# Supabase project configuration for Aperture.
+#
+# This file is the source of truth for the hosted project's Auth settings.
+# It is deliberately minimal: Aperture uses Supabase for email/password
+# authentication only (no Data API, Storage, Edge Functions or Realtime yet),
+# so unrelated sections are left at their CLI defaults and no local stack
+# (Docker) is required.
+#
+# Apply changes to the hosted project with:
+#   supabase config push --project-ref ezbczxhwznbyxjnsxsvv
+#
+# Client-safe values the Flutter app consumes (never commit them here; pass
+# them via --dart-define / env.json, see README):
+#   SUPABASE_URL              https://ezbczxhwznbyxjnsxsvv.supabase.co
+#   SUPABASE_PUBLISHABLE_KEY  the "default" publishable key (sb_publishable_...)
+
+project_id = "ezbczxhwznbyxjnsxsvv"
+
+[auth]
+enabled = true
+# Aperture is a mobile app with no web origin. Site URL only matters for
+# email-link flows, which this project does not use (confirmations are off),
+# so a localhost placeholder is set to satisfy the required field.
+site_url = "http://localhost:3000"
+additional_redirect_urls = []
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+# Email/password is the only sign-up path.
+enable_signup = true
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
+# Password policy the Flutter UI must communicate: at least 8 characters,
+# no character-class requirements.
+minimum_password_length = 8
+password_requirements = ""
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+# Confirmations are intentionally disabled so "Create account" returns a
+# session immediately and reviewers never need an inbox to test the app.
+# Hosted Supabase without custom SMTP can only email organisation members
+# anyway, so a confirmation step would block real testers.
+enable_confirmations = false
+secure_password_change = false
+# Keep the hosted defaults for OTP emails (unused today, but not weakened).
+max_frequency = "1m0s"
+otp_length = 8
+otp_expiry = 3600
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+
+[auth.mfa.totp]
+enroll_enabled = false
+verify_enabled = false
+
+[auth.mfa.phone]
+enroll_enabled = false
+verify_enabled = false
+
+[auth.mfa.web_authn]
+enroll_enabled = false
+verify_enabled = false

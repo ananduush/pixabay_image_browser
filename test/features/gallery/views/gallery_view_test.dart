@@ -23,7 +23,6 @@ import 'package:pixabay_image_browser/features/gallery/widgets/gallery_search_fi
 import 'package:pixabay_image_browser/features/gallery/widgets/gallery_search_results_header.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/gallery_searching_view.dart';
 import 'package:pixabay_image_browser/features/gallery/widgets/gallery_skeleton.dart';
-import 'package:pixabay_image_browser/features/gallery/widgets/glass_tab_bar.dart';
 
 import '../../../support/pixabay_fixtures.dart';
 
@@ -74,7 +73,6 @@ void main() {
     expect(find.text('Aperture'), findsOneWidget);
     expect(find.byType(GallerySkeleton), findsOneWidget);
     expect(find.byType(GallerySearchField), findsOneWidget);
-    expect(find.byType(GlassTabBar), findsOneWidget);
     expect(find.text(GalleryErrorView.retryLabel), findsNothing);
   });
 
@@ -668,62 +666,55 @@ void main() {
       },
     );
 
-    testWidgets(
-      'tapping the active Explore tab scrolls a loaded feed back to the header',
-      (tester) async {
-        await pumpLoadedFeed(tester, hits: 20);
-        when(
-          () => repository.getImages(query: '', page: 2, perPage: 20),
-        ).thenAnswer((_) async => pageWith(0));
+    testWidgets('scrollToTop returns a loaded feed to the header', (
+      tester,
+    ) async {
+      await pumpLoadedFeed(tester, hits: 20);
+      when(
+        () => repository.getImages(query: '', page: 2, perPage: 20),
+      ).thenAnswer((_) async => pageWith(0));
 
-        jumpToBottom();
-        await tester.pump();
-        expect(find.text('Aperture'), findsNothing);
+      jumpToBottom();
+      await tester.pump();
+      expect(find.text('Aperture'), findsNothing);
 
-        await tester.tap(find.bySemanticsLabel(GlassTabBar.activeTabLabel));
-        await tester.pump();
-        await tester.pump(GalleryController.scrollToTopDuration);
+      Get.find<GalleryController>().scrollToTop();
+      await tester.pump();
+      await tester.pump(GalleryController.scrollToTopDuration);
 
-        expect(find.text('Aperture'), findsOneWidget);
-        expect(Get.find<GalleryController>().scrollController.offset, 0);
-      },
-    );
+      expect(find.text('Aperture'), findsOneWidget);
+      expect(Get.find<GalleryController>().scrollController.offset, 0);
+    });
 
-    testWidgets(
-      'tapping the active Explore tab during search keeps the query',
-      (tester) async {
-        await pumpLoadedFeed(tester, hits: 20);
-        when(
-          () => repository.getImages(query: 'fog'),
-        ).thenAnswer((_) async => pageWith(20));
-        when(
-          () => repository.getImages(query: 'fog', page: 2, perPage: 20),
-        ).thenAnswer((_) async => pageWith(0));
-        await typeAndWait(tester, 'fog');
+    testWidgets('scrollToTop during search keeps the query', (tester) async {
+      await pumpLoadedFeed(tester, hits: 20);
+      when(
+        () => repository.getImages(query: 'fog'),
+      ).thenAnswer((_) async => pageWith(20));
+      when(
+        () => repository.getImages(query: 'fog', page: 2, perPage: 20),
+      ).thenAnswer((_) async => pageWith(0));
+      await typeAndWait(tester, 'fog');
 
-        jumpToBottom();
-        await tester.pump();
-        expect(find.text('Aperture'), findsNothing);
+      jumpToBottom();
+      await tester.pump();
+      expect(find.text('Aperture'), findsNothing);
 
-        await tester.tap(find.bySemanticsLabel(GlassTabBar.activeTabLabel));
-        await tester.pump();
-        await tester.pump(GalleryController.scrollToTopDuration);
+      Get.find<GalleryController>().scrollToTop();
+      await tester.pump();
+      await tester.pump(GalleryController.scrollToTopDuration);
 
-        expect(find.text('Aperture'), findsOneWidget);
-        expect(Get.find<GalleryController>().scrollController.offset, 0);
-        expect(
-          tester
-              .widget<EditableText>(find.byType(EditableText))
-              .controller
-              .text,
-          'fog',
-        );
-        expect(
-          find.text(GallerySearchResultsHeader.queryLabel('fog')),
-          findsOneWidget,
-        );
-      },
-    );
+      expect(find.text('Aperture'), findsOneWidget);
+      expect(Get.find<GalleryController>().scrollController.offset, 0);
+      expect(
+        tester.widget<EditableText>(find.byType(EditableText)).controller.text,
+        'fog',
+      );
+      expect(
+        find.text(GallerySearchResultsHeader.queryLabel('fog')),
+        findsOneWidget,
+      );
+    });
   });
 
   group('pull gating', () {

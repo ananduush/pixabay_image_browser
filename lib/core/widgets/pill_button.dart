@@ -3,14 +3,19 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
-/// Outlined 48px pill — the design's secondary action ("Try again").
 class PillButton extends StatelessWidget {
-  const PillButton({super.key, required this.label, required this.onPressed});
+  const PillButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.height = defaultHeight,
+  });
 
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
+  final double height;
 
-  static const double height = 48;
+  static const double defaultHeight = 48;
 
   @override
   Widget build(BuildContext context) {

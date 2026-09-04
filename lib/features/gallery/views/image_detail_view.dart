@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/pill_button.dart';
+import '../../auth/controllers/auth_controller.dart';
+import '../../auth/widgets/guest_favourite_sheet.dart';
 import '../controllers/gallery_controller.dart';
 import '../models/pixabay_image.dart';
 import '../widgets/gallery_state_view.dart';
@@ -41,6 +44,11 @@ class ImageDetailView extends StatelessWidget {
   void _searchTag(String tag) {
     Get.find<GalleryController>().search(tag);
     Get.back<void>();
+  }
+
+  void _onFavouriteTap(BuildContext context) {
+    if (Get.find<AuthController>().state.value.isAuthenticated) return;
+    unawaited(GuestFavouriteSheet.show(context));
   }
 
   @override
@@ -119,8 +127,7 @@ class ImageDetailView extends StatelessWidget {
               onTap: Get.back<void>,
             ),
           ),
-          // Favourite and download stay inert until their slices wire them.
-          const ImageDetailActions(),
+          ImageDetailActions(onFavouriteTap: () => _onFavouriteTap(context)),
         ],
       ),
     );

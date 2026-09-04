@@ -39,4 +39,18 @@ abstract final class AppColors {
 
   // Tag chip hairline (rgba(255,255,255,.6)).
   static const Color chipBorder = Color(0x99FFFFFF);
+
+  static const Color inkButton = Color(0xE616130F);
+  static const Color buttonBorder = Color(0x38FFFFFF);
+  static const Color buttonGloss = Color(0x29FFFFFF);
+  static const Color buttonShadow = Color(0x3D16130F);
+  static const Color paperFill32 = Color(0x52FBFAF8);
+  static const Color paperFill35 = Color(0x59FBFAF8);
+  static const Color rule10 = Color(0x1A000000);
+  static const Color text32 = Color(0x52000000);
+
+  static const Color inkFill8 = Color(0x1416130F);
+
+  static const Color scrim = Color(0x5716130F);
+  static const Color handle = Color(0x29000000);
 }

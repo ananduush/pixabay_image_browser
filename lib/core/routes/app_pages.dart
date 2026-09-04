@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 
-import '../../features/gallery/bindings/gallery_binding.dart';
+import '../../features/auth/bindings/auth_form_binding.dart';
+import '../../features/auth/views/auth_view.dart';
 import '../../features/gallery/models/pixabay_image.dart';
-import '../../features/gallery/views/gallery_view.dart';
+import '../../features/home/bindings/home_binding.dart';
+import '../../features/home/views/home_view.dart';
 import '../../features/gallery/views/image_detail_view.dart';
 import '../../features/gallery/views/image_viewer_view.dart';
 import 'app_routes.dart';
@@ -10,9 +12,14 @@ import 'app_routes.dart';
 abstract final class AppPages {
   static final List<GetPage<dynamic>> pages = <GetPage<dynamic>>[
     GetPage<dynamic>(
-      name: AppRoutes.gallery,
-      page: () => const GalleryView(),
-      binding: GalleryBinding(),
+      name: AppRoutes.home,
+      page: () => const HomeView(),
+      binding: HomeBinding(),
+    ),
+    GetPage<dynamic>(
+      name: AppRoutes.auth,
+      page: () => const AuthView(),
+      binding: AuthFormBinding(),
     ),
     // Details and the viewer render the PixabayImage they are given; neither
     // needs a controller, so neither has a binding.

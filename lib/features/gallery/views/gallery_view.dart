@@ -19,7 +19,6 @@ import '../widgets/gallery_search_field.dart';
 import '../widgets/gallery_search_results_header.dart';
 import '../widgets/gallery_searching_view.dart';
 import '../widgets/gallery_skeleton.dart';
-import '../widgets/glass_tab_bar.dart';
 
 /// Explore tab: the Pixabay feed in the Aperture layout.
 class GalleryView extends GetView<GalleryController> {
@@ -63,7 +62,6 @@ class GalleryView extends GetView<GalleryController> {
               ),
             ),
           ),
-          GlassTabBar(activeIndex: 0, onActiveTap: controller.scrollToTop),
         ],
       ),
     );
