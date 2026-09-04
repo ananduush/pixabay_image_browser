@@ -34,6 +34,7 @@ class _MockDownloads extends Mock implements ImageDownloadService {}
 void main() {
   late FakeFavoritesStorageService storage;
   late _MockDownloads downloads;
+  late MockAuthRepository authRepository;
 
   setUpAll(() {
     // Fonts fall back to the test environment's defaults; no network.
@@ -45,6 +46,7 @@ void main() {
     installPendingImageCache();
     storage = FakeFavoritesStorageService();
     downloads = _MockDownloads();
+    authRepository = MockAuthRepository();
   });
 
   tearDown(Get.reset);
@@ -61,7 +63,7 @@ void main() {
     if (user != null) storage.seed(user.id, saved);
     final auth = Get.put<AuthController>(
       AuthController(
-        repository: stubAuthRepository(MockAuthRepository(), user: user),
+        repository: stubAuthRepository(authRepository, user: user),
       ),
     );
     registerFavoritesFakes(storage: storage);
@@ -191,6 +193,95 @@ void main() {
 
     expect(find.byType(AuthView), findsOneWidget);
     expect(find.text(GuestFavouriteSheet.title), findsNothing);
+  });
+
+  /// Guest taps favourite, chooses Sign in on the sheet, lands on AuthView.
+  Future<void> reachAuthFromFavourite(WidgetTester tester) async {
+    await tester.tap(find.bySemanticsLabel(ImageDetailActions.favouriteLabel));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(FilledPillButton, GuestFavouriteSheet.signInLabel),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(AuthView), findsOneWidget);
+  }
+
+  Future<void> signInAs(WidgetTester tester, AuthUser user) async {
+    when(
+      () => authRepository.signIn(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenAnswer((_) async => user);
+    await tester.enterText(find.byType(TextField).at(0), user.email);
+    await tester.enterText(find.byType(TextField).at(1), 'password1');
+    await tester.pump();
+    await tester.tap(
+      find.widgetWithText(FilledPillButton, AuthView.signInAction),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('signing in from the sheet saves the image the guest tapped', (
+    tester,
+  ) async {
+    final image = imageWith();
+    final user = sampleUser();
+    await pumpDetails(tester, image);
+
+    await reachAuthFromFavourite(tester);
+    await signInAs(tester, user);
+
+    expect(find.byType(AuthView), findsNothing);
+    expect(find.byType(ImageDetailView), findsOneWidget);
+    expect(find.text(GuestFavouriteSheet.title), findsNothing);
+    expect(
+      find.bySemanticsLabel(ImageDetailActions.savedLabel),
+      findsOneWidget,
+    );
+    expect(storage.saved(user.id), <PixabayImage>[image]);
+    expect(find.text(FavoritesView.writeErrorMessage), findsNothing);
+  });
+
+  testWidgets('an image the account already holds stays saved, once', (
+    tester,
+  ) async {
+    final image = imageWith();
+    final user = sampleUser();
+    storage.seed(user.id, <PixabayImage>[image]);
+    await pumpDetails(tester, image);
+
+    await reachAuthFromFavourite(tester);
+    await signInAs(tester, user);
+
+    expect(
+      find.bySemanticsLabel(ImageDetailActions.savedLabel),
+      findsOneWidget,
+    );
+    expect(storage.saved(user.id), <PixabayImage>[image]);
+    expect(storage.writes, 0);
+  });
+
+  testWidgets('backing out of sign-in saves nothing', (tester) async {
+    await pumpDetails(tester, imageWith());
+
+    await reachAuthFromFavourite(tester);
+    await tester.tap(find.bySemanticsLabel(AuthView.backLabel));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ImageDetailView), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(ImageDetailActions.favouriteLabel),
+      findsOneWidget,
+    );
+    expect(storage.writes, 0);
+    expect(storage.store, isEmpty);
+    verifyNever(
+      () => authRepository.signIn(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    );
   });
 
   testWidgets('signed in, the pill saves and unsaves', (tester) async {

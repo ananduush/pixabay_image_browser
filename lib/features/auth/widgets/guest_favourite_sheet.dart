@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
-import '../../../core/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/filled_pill_button.dart';
@@ -19,8 +17,11 @@ class GuestFavouriteSheet extends StatelessWidget {
 
   static const double margin = 12;
 
-  static Future<void> show(BuildContext context) {
-    return showModalBottomSheet<void>(
+  /// Resolves true when the user chose [signInLabel]; false for "Not now",
+  /// the scrim, or a swipe down. The caller owns what happens next, so it
+  /// can also finish whatever the guest was trying to do once signed in.
+  static Future<bool> show(BuildContext context) async {
+    final choice = await showModalBottomSheet<bool>(
       context: context,
       barrierColor: AppColors.scrim,
       backgroundColor: Colors.transparent,
@@ -28,11 +29,7 @@ class GuestFavouriteSheet extends StatelessWidget {
       isScrollControlled: true,
       builder: (BuildContext context) => const GuestFavouriteSheet(),
     );
-  }
-
-  void _signIn(BuildContext context) {
-    Navigator.of(context).pop();
-    Get.toNamed<void>(AppRoutes.auth);
+    return choice ?? false;
   }
 
   @override
@@ -65,7 +62,7 @@ class GuestFavouriteSheet extends StatelessWidget {
             FilledPillButton(
               label: signInLabel,
               height: 54,
-              onPressed: () => _signIn(context),
+              onPressed: () => Navigator.of(context).pop(true),
             ),
             const SizedBox(height: 8),
             Semantics(

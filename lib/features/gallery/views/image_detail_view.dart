@@ -75,12 +75,23 @@ class ImageDetailView extends GetView<ImageDetailController> {
         AppToast.show(overlay, message, bottomOffset: bottomOffset);
   }
 
+  /// A guest is offered sign-in first; if they come back signed in, the
+  /// tap that started it all is honoured and the image is saved without
+  /// asking again. Backing out of the auth screen saves nothing.
   Future<void> _onFavouriteTap(BuildContext context) async {
-    if (!Get.find<AuthController>().state.value.isAuthenticated) {
-      unawaited(GuestFavouriteSheet.show(context));
+    final toast = _toaster(context);
+    final auth = Get.find<AuthController>();
+    if (!auth.state.value.isAuthenticated) {
+      if (!await GuestFavouriteSheet.show(context)) return;
+      await Get.toNamed<void>(AppRoutes.auth);
+      if (!auth.state.value.isAuthenticated) return;
+      // `add`, not `toggle`: the intent was to save, and an image this
+      // account already holds must stay saved.
+      if (!await _favorites.add(image)) {
+        toast(FavoritesView.writeErrorMessage);
+      }
       return;
     }
-    final toast = _toaster(context);
     if (!await _favorites.toggle(image)) {
       toast(FavoritesView.writeErrorMessage);
     }
