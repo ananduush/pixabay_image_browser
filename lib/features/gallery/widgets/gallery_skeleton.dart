@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 
-/// Initial-loading placeholder: chip bars, a 4:3 hero block with caption
-/// bars, three square tiles and another hero block, each pulsing between
-/// 45% and 100% opacity on a 1.4s cycle with staggered phases.
+/// Initial-loading placeholder: a 4:3 hero block with caption bars, three
+/// square tiles and another hero block, each pulsing between 45% and 100%
+/// opacity on a 1.4s cycle with staggered phases.
 class GallerySkeleton extends StatefulWidget {
   const GallerySkeleton({super.key});
 
@@ -33,22 +33,6 @@ class _GallerySkeletonState extends State<GallerySkeleton>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.gutter,
-            16,
-            AppSpacing.gutter,
-            0,
-          ),
-          child: Row(
-            spacing: 9,
-            children: <Widget>[
-              _Block(pulse: _pulse, width: 78, height: 12),
-              _Block(pulse: _pulse, phase: .1, width: 52, height: 12),
-              _Block(pulse: _pulse, phase: .2, width: 64, height: 12),
-            ],
-          ),
-        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.gutter,
@@ -102,14 +86,12 @@ class _GallerySkeletonState extends State<GallerySkeleton>
 }
 
 class _Block extends StatelessWidget {
-  const _Block({required this.pulse, this.phase = 0, this.width, this.height});
+  const _Block({required this.pulse, this.phase = 0});
 
   final Animation<double> pulse;
 
   /// Fraction of the cycle this block lags behind (CSS animation-delay).
   final double phase;
-  final double? width;
-  final double? height;
 
   static const double _min = .45;
 
@@ -123,14 +105,10 @@ class _Block extends StatelessWidget {
         final opacity = _min + (1 - _min) * (1 - math.cos(2 * math.pi * t)) / 2;
         return Opacity(opacity: opacity, child: child);
       },
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: const DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.inkFill7,
-            borderRadius: BorderRadius.all(Radius.circular(AppRadius.image)),
-          ),
+      child: const DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.inkFill7,
+          borderRadius: BorderRadius.all(Radius.circular(AppRadius.image)),
         ),
       ),
     );
