@@ -149,7 +149,7 @@ flutter analyze
 dart format --output=none --set-exit-if-changed .
 ```
 
-The suite (300 tests) covers model parsing, the Pixabay service's error mapping,
+The suite (302 tests) covers model parsing, the Pixabay service's error mapping,
 controller behaviour under stale responses and races, the Favourites storage and
 corruption handling, the Supabase error mapping, and widget tests for every screen
 including narrow (320 pt) layouts and keyboard insets. Network, image and font
