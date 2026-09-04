@@ -62,11 +62,12 @@ class GalleryErrorView extends StatelessWidget {
         null,
         false,
       ),
-      PixabayUnexpectedException(:final message) => (
+      // The raw message is logged by the controller, never shown.
+      PixabayUnexpectedException() => (
         const Icon(Icons.error_outline, size: 34, color: AppColors.critical),
         unexpectedTitle,
         unexpectedBody,
-        message,
+        null,
         true,
       ),
     };
